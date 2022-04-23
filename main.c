@@ -10,7 +10,9 @@ int main() {
   FILE *fd = fopen("sample.txt", "r");
   buf_init(&buffer, fd); 
   char *out = lexer_getalphanum(&buffer);
-  printf("%s", out);
-
+  //buf_print(&buffer);
+   printf("%s\n", out);
+   long li = lexer_getnumber(&buffer);
+   printf("%li", li);
   return 0;
 }
