@@ -3,8 +3,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-bool is_num(char c) {
+bool is_num(char c)
+{
   return c >= '0' && c <= '9';
+}
+
+bool is_letter(char c)
+{
+  return (c >= 'a' & c <= 'z') ||
+         (c >= 'A' && c <= 'Z');
 }
 
 char *concat(const char *s1, const char *s2)
@@ -14,6 +21,7 @@ char *concat(const char *s1, const char *s2)
   strcat(result, s2);
   return result;
 }
+
 char *lexer_getalphanum(buffer_t *buffer)
 {
 
@@ -24,10 +32,7 @@ char *lexer_getalphanum(buffer_t *buffer)
 
   int end = 0;
   int offset = 1;
-  while (
-      (c <= '9' && c >= '0') ||
-      (c >= 'a' & c <= 'z') ||
-      (c >= 'A' && c <= 'Z'))
+  while (is_num(c) || is_letter(c))
   {
     size++;
 
@@ -52,14 +57,12 @@ char *lexer_getalphanum(buffer_t *buffer)
   char *out = malloc(size);
   char *first_ptr = out;
   printf("size:%d\n", size);
-  // if (!buf_eof(buffer))
 
   buf_rollback(buffer, size + offset);
 
   while (size > 0)
   {
     c = buf_getchar(buffer);
-    // out = strcat(out, &c);
     *out = c;
     out++;
     size--;
@@ -76,29 +79,40 @@ long lexer_getnumber(buffer_t *buffer)
 {
 
   buf_skipblank(buffer);
-  buf_lock(buffer);  
-  char *out = malloc(3);
-  char *temp = out;
-  
+  buf_lock(buffer);
+
   char ch = buf_getchar(buffer);
-  if (!is_num(ch)) {
-    if (ch == '-') {
-       *out = ch;
-       out++;
-    }
-  } else {
-      *out = ch;
-       out++;
+  int count = 0;
+  if (is_num(ch) || ch == '-')
+  {
+    count++;
   }
-  while (true) {
+  else
+  {
+    return 0;
+  }
+
+  while (true)
+  {
+    count++;
     if (buffer->avail == 0)
       break;
     ch = buf_getchar(buffer);
-    if (!is_num(ch)) {
+    if (!is_num(ch))
+    {
       break;
     }
+  }
+  buf_rollback(buffer, count);
+  char *out = malloc(count);
+  char *temp = out;
+
+  while (count > 0)
+  {
+    ch = buf_getchar(buffer);
     *out = ch;
-    out++;    
+    out++;
+    count--;
   }
   return strtol(temp, NULL, 10);
 }
