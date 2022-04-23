@@ -1,5 +1,5 @@
 # Compiler et executer le projet
-main.c buffer/*.c lexer/*.c utils/*.c  -o main && ./main
+```gcc main.c buffer/*.c lexer/*.c utils/*.c  -o main && ./main```
 
 # Roadmap
 
