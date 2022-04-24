@@ -74,6 +74,13 @@ char *lexer_getalphanum(buffer_t *buffer)
 
 char *lexer_getalphanum_rollback(buffer_t *buffer)
 {
+  int initial_pos = buffer->it;
+  char *out = lexer_getalphanum(buffer);
+  buf_lock(buffer);
+  buf_rollback(buffer, buffer->it - initial_pos);
+  buf_unlock(buffer);
+  //printf("%d, %d\n", buffer->it, initial_pos);
+  return out;
 }
 
 long lexer_getnumber(buffer_t *buffer)
