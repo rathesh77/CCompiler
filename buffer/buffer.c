@@ -1,13 +1,13 @@
 /* vim: set tabstop=4:softtabstop=4:shiftwidth=4 */
+#include "buffer.h"
+
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
-#include "buffer.h"
 #include "../utils/utils.h"
 
-void buf_init (buffer_t *buffer, FILE* fd)
-{
+void buf_init(buffer_t *buffer, FILE *fd) {
   memset(buffer->content, 0, BUF_SIZE);
   buffer->fd = fd;
   buffer->it = 0;
@@ -21,37 +21,35 @@ void buf_init (buffer_t *buffer, FILE* fd)
   buffer->eof = false;
 }
 
-bool buf_eof_strict (buffer_t *buffer) {
+bool buf_eof_strict(buffer_t *buffer) {
   return buffer->avail == 0 && buffer->eof == true;
 }
 
-bool buf_eof (buffer_t *buffer) {
+bool buf_eof(buffer_t *buffer) {
   buf_skipblank(buffer);
   return buf_eof_strict(buffer);
 }
 
-void buf_lock (buffer_t *buffer) {
+void buf_lock(buffer_t *buffer) {
   if (buffer->islocked) {
     fprintf(stderr, "Warning: lock was already set.\n");
-    //print_backtrace();
+    // print_backtrace();
   }
   buffer->bytesreadsincelock = 0;
   buffer->lock = buffer->it;
   buffer->islocked = true;
 }
 
-void buf_unlock (buffer_t *buffer) {
+void buf_unlock(buffer_t *buffer) {
   if (!buffer->islocked) {
     fprintf(stderr, "Warning: lock was not set.\n");
-    //print_backtrace();
+    // print_backtrace();
   }
   buffer->bytesreadsincelock = 0;
   buffer->islocked = false;
 }
 
-static
-size_t buf_fread (buffer_t *buffer, size_t offset, size_t n)
-{
+static size_t buf_fread(buffer_t *buffer, size_t offset, size_t n) {
   // printf("read %lu bytes\n", n);
   size_t cnt = fread(&(buffer->content[offset]), 1, n, buffer->fd);
   if (cnt < n) {
@@ -64,32 +62,25 @@ size_t buf_fread (buffer_t *buffer, size_t offset, size_t n)
   return cnt;
 }
 
-static
-void buf_mod (size_t *val, size_t toadd)
-{
+static void buf_mod(size_t *val, size_t toadd) {
   *val = (*val + toadd) % BUF_SIZE;
 }
 
-static
-void buf_mod_backwards (size_t *val, size_t tosub)
-{
+static void buf_mod_backwards(size_t *val, size_t tosub) {
   *val = (*val - tosub) % BUF_SIZE;
 }
 
-static
-void buf_move_it (buffer_t *buffer, size_t cnt) {
+static void buf_move_it(buffer_t *buffer, size_t cnt) {
   buf_mod(&buffer->it, cnt);
   buffer->currchar += cnt;
 }
 
-static
-void buf_move_it_bw (buffer_t *buffer, size_t cnt) {
+static void buf_move_it_bw(buffer_t *buffer, size_t cnt) {
   buf_mod_backwards(&buffer->it, cnt);
   buffer->currchar -= cnt;
 }
 
-char buf_getchar (buffer_t *buffer)
-{
+char buf_getchar(buffer_t *buffer) {
   size_t end;
   if (buffer->avail == 0) {
     if (buffer->islocked) {
@@ -102,11 +93,10 @@ char buf_getchar (buffer_t *buffer)
           end = 0;
         }
         end += buf_fread(buffer, 0, buffer->lock);
-        if (end == 0)
-          goto fail;
+        if (end == 0) goto fail;
       } else if (buffer->bytesreadsincelock >= BUF_SIZE) {
         printf("Can't lock more than %d chars.", BUF_SIZE);
-        //print_backtrace();
+        // print_backtrace();
         exit(1);
       } else {
         end = buf_fread(buffer, buffer->end, buffer->lock - buffer->end);
@@ -132,29 +122,25 @@ fail:
   return '\0';
 }
 
-char buf_getchar_after_blank (buffer_t *buffer) {
+char buf_getchar_after_blank(buffer_t *buffer) {
   buf_skipblank(buffer);
   return buf_getchar(buffer);
 }
 
-void buf_getnchar (buffer_t *buffer, char *out, size_t n)
-{
+void buf_getnchar(buffer_t *buffer, char *out, size_t n) {
   char *outcurs = out;
   size_t cnt, max;
   char *content = buffer->content;
- 
+
   while (n) {
     // number of chars that can be read w/o going back to 0
     size_t currpos = !buffer->islocked ? buffer->it : buffer->lock;
 
-    size_t nmax = BUF_SIZE - currpos < n
-      ? BUF_SIZE - currpos
-      : n;
+    size_t nmax = BUF_SIZE - currpos < n ? BUF_SIZE - currpos : n;
     // if the current number of buffered items is not enough
     if (buffer->avail < nmax) {
       // if |xxxxx]------[xxxxx| then |xxxxxxxxxxx][xxxxx|
-      if (buffer->end < currpos)
-        max = currpos - buffer->end;
+      if (buffer->end < currpos) max = currpos - buffer->end;
       // if |-----[xxxxxx]-----| then |-----[xxxxxxxxxxx]|
       else
         max = BUF_SIZE - buffer->end;
@@ -172,37 +158,32 @@ void buf_getnchar (buffer_t *buffer, char *out, size_t n)
     memcpy(outcurs, &content[currpos], nmax);
     buffer->avail -= nmax;
     buf_move_it(buffer, nmax);
-    if (n <= nmax)
-      break;
+    if (n <= nmax) break;
     outcurs += nmax;
     n -= nmax;
   }
 }
 
-void buf_forward (buffer_t *buffer, size_t n)
-{
+void buf_forward(buffer_t *buffer, size_t n) {
   buf_move_it(buffer, n);
   buffer->avail -= n;
 }
 
-void buf_rollback (buffer_t *buffer, size_t n)
-{
+void buf_rollback(buffer_t *buffer, size_t n) {
   if (!buffer->islocked) {
     fprintf(stderr, "Warning: rollback without lock.\n");
-    //print_backtrace();
+    // print_backtrace();
   }
   buf_move_it_bw(buffer, n);
   buffer->avail += n;
 }
 
-void buf_rollback_and_unlock (buffer_t *buffer, size_t n)
-{
+void buf_rollback_and_unlock(buffer_t *buffer, size_t n) {
   buf_rollback(buffer, n);
   buf_unlock(buffer);
 }
 
-size_t buf_skipblank (buffer_t *buffer)
-{
+size_t buf_skipblank(buffer_t *buffer) {
   bool waslocked = false;
   if (!buffer->islocked) {
     buf_lock(buffer);
@@ -216,8 +197,7 @@ size_t buf_skipblank (buffer_t *buffer)
     count++;
   }
   buf_rollback(buffer, 1);
-  if (!waslocked)
-    buf_unlock(buffer);
+  if (!waslocked) buf_unlock(buffer);
 
   if (next == '\0') {
     buffer->avail = 0;
@@ -225,9 +205,7 @@ size_t buf_skipblank (buffer_t *buffer)
   return count;
 }
 
-
-char buf_getchar_rollback (buffer_t *buffer)
-{
+char buf_getchar_rollback(buffer_t *buffer) {
   bool waslocked = true;
   buf_skipblank(buffer);
   if (!buffer->islocked) {
@@ -236,30 +214,23 @@ char buf_getchar_rollback (buffer_t *buffer)
   }
   char next = buf_getchar(buffer);
   buf_rollback(buffer, 1);
-  if (!waslocked)
-    buf_unlock(buffer);
+  if (!waslocked) buf_unlock(buffer);
   return next;
 }
 
-void buf_print (buffer_t *buffer)
-{
+void buf_print(buffer_t *buffer) {
   printf(COLOR_BLUE "#### <buffer> ####\n" COLOR_DEFAULT);
 #ifdef WIN32
   printf(COLOR_GREEN "it: %u\nend: %u\navail: %u\nlock: %u\n" COLOR_DEFAULT,
-      buffer->it,
-      buffer->end,
-      buffer->avail,
-      buffer->lock);
+         buffer->it, buffer->end, buffer->avail, buffer->lock);
 #else
   printf(COLOR_GREEN "it: %zu\nend: %zu\navail: %zu\nlock: %zu\n" COLOR_DEFAULT,
-      buffer->it,
-      buffer->end,
-      buffer->avail,
-      buffer->lock);
+         buffer->it, buffer->end, buffer->avail, buffer->lock);
 #endif
   char *color = NULL;
   for (size_t i = 0; i < BUF_SIZE; i++) {
-    if (buffer->it != i && buffer->end != i && (!buffer->islocked || buffer->lock != i)) {
+    if (buffer->it != i && buffer->end != i &&
+        (!buffer->islocked || buffer->lock != i)) {
       printf("%c", buffer->content[i]);
       continue;
     }
