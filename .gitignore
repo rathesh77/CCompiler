@@ -2,3 +2,4 @@
 .vscode
 main
 .DS_store
+*.exe
