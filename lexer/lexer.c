@@ -67,6 +67,7 @@ char *lexer_getalphanum(buffer_t *buffer)
     out++;
     size--;
   }
+  *out = '\0';
   buf_unlock(buffer);
   return first_ptr;
 }
@@ -114,5 +115,7 @@ long lexer_getnumber(buffer_t *buffer)
     out++;
     count--;
   }
+  *out = '\0';
+
   return strtol(temp, NULL, 10);
 }
