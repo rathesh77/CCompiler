@@ -1,5 +1,5 @@
 compile:
-	gcc main.c buffer/*.c lexer/*.c utils/*.c  -o main
+	gcc main.c */*.c  -o main
 
 run:
 	./main
