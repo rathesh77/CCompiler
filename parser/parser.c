@@ -1,10 +1,8 @@
 #include "parser.h"
 
-#include "../ast/ast.h"
-#include "../buffer/buffer.h"
-#include "../lexer/lexer.h"
 #include <string.h>
 #include <stdlib.h>
+
 void parse_code(buffer_t *buffer)
 {
   // presence d'accolades
