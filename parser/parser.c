@@ -1,6 +1,6 @@
 #include "parser.h"
 #include "../buffer/buffer.h"
-
+#include "../lexer/lexer.h"
 void parse_code(buffer_t *buffer) {
 
   // presence d'accolades
@@ -13,11 +13,11 @@ void parse_code(buffer_t *buffer) {
   // ne pas oublier les operateurs unaires (++, --, *=, %=, /=, ...)
 
   while (!buf_eof(buffer)) {
-    char s = buf_getchar(buffer);
-    if ( s == ' ') {
+    char *s = lexer_getalphanum(buffer);
+    if ( *s == ' ') {
       
     }
-    printf("%c\n", s);
+    printf("%c\n", *s);
   }
 
 }

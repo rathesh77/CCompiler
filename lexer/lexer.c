@@ -20,7 +20,8 @@ char *concat(const char *s1, const char *s2) {
 
 char *lexer_getalphanum(buffer_t *buffer) {
   int size = 0;
-
+  
+  buf_skipblank(buffer);
   buf_lock(buffer);
   char c = buf_getchar(buffer);
 
@@ -39,7 +40,7 @@ char *lexer_getalphanum(buffer_t *buffer) {
 
   if (size == 0) {
     printf("fin de ligne\n");
-    buf_getchar(buffer);
+    buf_getchar_rollback(buffer);
     buf_unlock(buffer);
     //buf_print(buffer);
     return "\0";
