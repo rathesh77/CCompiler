@@ -103,6 +103,6 @@ long lexer_getnumber(buffer_t *buffer) {
     count--;
   }
   *out = '\0';
-
+  buf_unlock(buffer);
   return strtol(temp, NULL, 10);
 }
