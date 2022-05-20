@@ -4,8 +4,9 @@
 #include "../buffer/buffer.h"
 #include "../lexer/lexer.h"
 #include <string.h>
-
-void parse_code(buffer_t *buffer) {
+#include <stdlib.h>
+void parse_code(buffer_t *buffer)
+{
   // presence d'accolades
   // declarations de fonctions (fonction func (a : entier, b: entier ...) {})
   // appels de fonctions ( func(a, b) )
@@ -18,45 +19,63 @@ void parse_code(buffer_t *buffer) {
   // on cherche d'abord une declaration de fonction, si y en a pas, on throw une
   // erreur
   ast_t *function;
-  while (buf_eof(buffer) == false) {
+  while (buf_eof(buffer) == false)
+  {
     char *lexem = lexer_getalphanum(buffer);
-    if (strcmp("fonction", lexem) == 0) {
+    if (strcmp("fonction", lexem) == 0)
+    {
       char *func_name = lexer_getalphanum(buffer);
-      buf_skipblank(buffer);
-      char left_parenthesis = buf_getchar(buffer);
-      ast_list_t *params = NULL;
+      char left_parenthesis = buf_getchar_after_blank(buffer);
+      ast_list_t *params = malloc(sizeof(struct ast_list_t));
       ast_list_t *stmts;
-      ast_list_t *ptr_param = params;
+      ast_list_t *ptr_params = params;
       ast_list_t *ptr_stmts = stmts;
 
-      if (left_parenthesis != '(') {
+      if (left_parenthesis != '(')
+      {
         printf("error");
         return;
       }
-      while (true) {
+      while (true)
+      {
         char *param_name = lexer_getalphanum(buffer);
         buf_skipblank(buffer);
-        if (buf_getchar(buffer) != ':') {
+        if (buf_getchar(buffer) != ':')
+        {
           printf("error");
           return;
         }
         char *param_type = lexer_getalphanum(buffer);
-        ptr_param->node = ast_new_variable(param_name, 0);
-        ptr_param = ptr_param->next;
-        char *next_sym = lexer_getalphanum(buffer);
-        if (*next_sym == ')') {
-          printf("declaration fonction parsé");
+        ptr_params->node = ast_new_variable(param_name, 0);
+        ptr_params->next = malloc(sizeof(struct ast_list_t));
+        ptr_params = ptr_params->next;
+        char next_sym = buf_getchar_after_blank(buffer);
+        if (next_sym == ')')
+        {
+          if (buf_getchar_after_blank(buffer) != '{') {
+            printf("error");
+            return;
+          }
+          printf("declaration fonction parsé\n");
           function = ast_new_function(func_name, 0, params, stmts);
+          parse_function(buffer, function);
           break;
-
-        } else if (*next_sym != ',') {
+        }
+        else if (next_sym != ',')
+        {
           printf("error");
           return;
         }
       }
-    } else {
+    }
+    else
+    {
       break;
     }
   }
   printf("end\n");
+}
+
+void parse_function(buffer_t *buffer, ast_t *function) {
+
 }
