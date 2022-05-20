@@ -38,16 +38,16 @@ char *lexer_getalphanum(buffer_t *buffer) {
   }
 
   if (size == 0) {
-    printf("end\n");
-    buf_rollback(buffer, 1);
+    printf("fin de ligne\n");
+    buf_getchar(buffer);
     buf_unlock(buffer);
-    buf_print(buffer);
-    return "";
+    //buf_print(buffer);
+    return "\0";
   }
 
   char *out = malloc(size);
   char *first_ptr = out;
-  printf("size:%d\n", size);
+  //printf("size:%d\n", size);
 
   buf_rollback(buffer, size + offset);
 
