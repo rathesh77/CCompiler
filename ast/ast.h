@@ -89,8 +89,8 @@ typedef struct ast_t
 } ast_t;
 
 typedef struct ast_list_t {
-  ast_t *curr;
-  ast_t *next;
+  ast_t *node;
+  struct ast_list_t *next;
 } ast_list_t;
 
 ast_t *ast_new_integer(long val);

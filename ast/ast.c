@@ -100,11 +100,13 @@ ast_t *ast_new_return(ast_t *expr)
 ast_list_t *ast_list_new_node(ast_t *elem)
 {
   ast_list_t *ast_list;
-  ast_list->curr = elem;
+  ast_list->node = elem;
   return ast_list;
 }
 ast_list_t *ast_list_add(ast_list_t **list, ast_t *elem)
 {
-  (*list)->next = elem;
-  return *list;
+  ast_list_t *new_list;
+  new_list->node = elem;
+  (*list)->next = new_list;
+  return new_list;
 }

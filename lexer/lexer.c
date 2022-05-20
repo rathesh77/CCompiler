@@ -8,7 +8,7 @@
 bool is_num(char c) { return c >= '0' && c <= '9'; }
 
 bool is_letter(char c) {
-  return (c >= 'a' & c <= 'z') || (c >= 'A' && c <= 'Z');
+  return ((c) >= ('a') && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
 char *concat(const char *s1, const char *s2) {
