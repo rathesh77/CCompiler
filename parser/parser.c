@@ -24,7 +24,7 @@ void parse_code(buffer_t *buffer) {
       char *func_name = lexer_getalphanum(buffer);
       buf_skipblank(buffer);
       char left_parenthesis = buf_getchar(buffer);
-      ast_list_t *params;
+      ast_list_t *params = NULL;
       ast_list_t *stmts;
       ast_list_t *ptr_param = params;
       ast_list_t *ptr_stmts = stmts;
@@ -34,14 +34,14 @@ void parse_code(buffer_t *buffer) {
         return;
       }
       while (true) {
-        lexem = lexer_getalphanum(buffer);
         char *param_name = lexer_getalphanum(buffer);
-        if (lexer_getalphanum(buffer)[0] != ':') {
+        buf_skipblank(buffer);
+        if (buf_getchar(buffer) != ':') {
           printf("error");
           return;
         }
         char *param_type = lexer_getalphanum(buffer);
-        ptr_param->node = ast_new_variable(param_name, param_type == "entier" ? 1 : 0);
+        ptr_param->node = ast_new_variable(param_name, 0);
         ptr_param = ptr_param->next;
         char *next_sym = lexer_getalphanum(buffer);
         if (*next_sym == ')') {
