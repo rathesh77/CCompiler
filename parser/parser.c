@@ -16,6 +16,7 @@ void parse_code(buffer_t *buffer)
 
   // on cherche d'abord une declaration de fonction, si y en a pas, on throw une
   // erreur
+  // pour l'instant on ne prend en compte que le type INTEGER pour les variables
   ast_t *function;
   while (buf_eof(buffer) == false)
   {
@@ -44,9 +45,10 @@ void parse_code(buffer_t *buffer)
           return;
         }
         char *param_type = lexer_getalphanum(buffer);
-        ptr_params->node = ast_new_variable(param_name, 0);
-        ptr_params->next = malloc(sizeof(struct ast_list_t));
-        ptr_params = ptr_params->next;
+        ptr_params = ast_list_add(&ptr_params, ast_new_variable(param_name, 0));
+        //ptr_params->node = ast_new_variable(param_name, 0);
+        //ptr_params->next = malloc(sizeof(struct ast_list_t));
+        //ptr_params = ptr_params->next;
         char next_sym = buf_getchar_after_blank(buffer);
         if (next_sym == ')')
         {
@@ -75,5 +77,74 @@ void parse_code(buffer_t *buffer)
 }
 
 void parse_function(buffer_t *buffer, ast_t *function) {
+  char *lexem = NULL;
+  function->function.stmts = malloc(sizeof(struct ast_list_t));
+      ast_list_t *ptr_stmts = function->function.stmts;
 
+  while (!buf_eof(buffer)) {
+    char end_bracket = buf_getchar_after_blank(buffer);
+    //buf_lock(buffer);
+    //buf_rollback_and_unlock(buffer, 1);
+    if (end_bracket == '}') {
+      printf("parsing de fonction terminé\n");
+      break;
+    }
+    buf_lock(buffer);
+    buf_rollback_and_unlock(buffer, 1);
+    char *lexem = lexer_getalphanum(buffer);
+    ast_t *st;
+    if (strcmp(lexem, "si") == 0) {
+      st = parse_condition(buffer);
+    } else if (strcmp(lexem, "pour") == 0) {
+      st = parse_loop(buffer);
+    } else {
+      char next_char = buf_getchar_after_blank(buffer);
+      if (next_char == '(') {
+        st = parse_fncall(buffer, lexem);
+         // function->call.args = malloc(sizeof(ast_list_t));
+
+       ptr_stmts= ast_list_add(&(ptr_stmts), st);
+      } else if (next_char == '=') {
+        st = parse_assignment(buffer);
+      } else {
+        printf("error");
+        return;
+      }
+    }
+  }
+  return;
+}
+
+ast_t *parse_condition(buffer_t *buffer) {
+
+}
+
+ast_t *parse_loop(buffer_t *buffer) {
+
+}
+
+ast_t * parse_assignment(buffer_t *buffer) {
+}
+
+ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
+  ast_t *fn_call = malloc(sizeof(struct ast_t));
+  //fn_call = ast_new_fncall(fn_name)
+  ast_list_t args = {};
+  ast_list_t *ptr = &args;
+  while (true) {
+    char *arg = lexer_getalphanum(buffer);
+    if (strlen(arg) > 0) {
+      char next_char = buf_getchar_after_blank(buffer);
+      if (next_char != ',' && next_char != ')') {
+        printf("error lors du parsing de la function %s\n", fn_name);
+        return NULL;
+      }
+      ptr = ast_list_add(&ptr, ast_new_integer(atol(arg)));
+    } else {
+      break;
+    }
+   
+  }
+  fn_call = ast_new_fncall(fn_name, &args);
+  return fn_call;
 }

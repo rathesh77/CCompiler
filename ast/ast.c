@@ -19,7 +19,7 @@ ast_t *ast_new_variable(char *name, int type)
 }
 ast_t *ast_new_binary(ast_binary_e op, ast_t *left, ast_t *right)
 {
-  ast_t *ast = malloc(sizeof(struct ast_t));
+  ast_t *ast;
   ast->type = AST_BINARY;
   ast->binary.left = left;
   ast->binary.right = right;
@@ -105,8 +105,8 @@ ast_list_t *ast_list_new_node(ast_t *elem)
 }
 ast_list_t *ast_list_add(ast_list_t **list, ast_t *elem)
 {
-  ast_list_t *new_list = malloc(sizeof(struct ast_list_t));
-  new_list->node = elem;
-  (*list)->next = new_list;
-  return new_list;
+  (*list)->node = malloc(sizeof(struct ast_t));
+  (*list)->node = elem;
+  (*list)->next = malloc(sizeof(struct ast_list_t));
+  return (*list)->next;
 }
