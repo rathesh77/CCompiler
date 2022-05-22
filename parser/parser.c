@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "../utils/utils.h"
 
 void parse_code(buffer_t *buffer)
 {
@@ -137,25 +138,51 @@ ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
   ast_list_t *head = args;
   ast_list_t *cursor = args;
   while (true) {
-    char *arg = lexer_getalphanum(buffer);
-    if (strlen(arg) > 0) {
-      char next_char = buf_getchar_after_blank(buffer);
-      if (next_char != ',' && next_char != ')') {
-        printf("error lors du parsing de la function %s\n", fn_name);
-        return NULL;
-      }
-      //cursor = ast_list_add(&ptr, ast_new_integer(atol(arg)));
-      cursor->node = ast_new_integer(atol(arg));
+    ast_t *arg = parse_arg(buffer, cursor);
+    char next_char = buf_getchar_after_blank(buffer);
+    if (next_char != ',' && next_char != ')') {
+      printf("error lors du parsing de la function %s\n", fn_name);
+      return NULL;
+    }
+    //cursor = ast_list_add(&ptr, ast_new_integer(atol(arg)));
+    if (arg != NULL) {
+      cursor->node = arg; //ast_new_integer(atol(arg));
       cursor->next = malloc(sizeof(ast_list_t));
-      cursor = cursor->next;      
-      if (next_char == ')') {
-        break;
-      }
-    } else {
+      cursor = cursor->next;
+    }      
+    if (next_char == ')') {
       break;
     }
-   
   }
   fn_call = ast_new_fncall(fn_name, head);
   return fn_call;
+}
+
+ast_t *parse_arg(buffer_t *buffer, ast_list_t *cursor) {
+    char ch = buf_getchar_after_blank(buffer);
+    buf_lock(buffer);
+    buf_rollback_and_unlock(buffer, 1);
+    if (is_letter(ch) == true) {
+      // si premier char est une lettre
+      //  alors l'arg est soit un appel de fonction, soit une variable
+      // sinon c'est surement un entier hardcodé
+
+      char *arg = lexer_getalphanum(buffer);
+      char next_char = buf_getchar_rollback(buffer);
+      if (next_char == '(') {
+        buf_getchar(buffer);
+        return parse_fncall(buffer, arg);
+      }
+      else if (next_char == ',' || next_char == ')') {
+        return ast_new_variable(arg, 0);
+      } else {
+        printf("error lors du parsing d'un argument: %s\n", arg);
+        return NULL;
+      }
+      
+
+      //char *arg = lexer_getalphanum(buffer);
+    } 
+    return ast_new_integer(atol(lexer_getalphanum(buffer)));
+    
 }
