@@ -19,7 +19,7 @@ ast_t *ast_new_variable(char *name, int type)
 }
 ast_t *ast_new_binary(ast_binary_e op, ast_t *left, ast_t *right)
 {
-  ast_t *ast;
+  ast_t *ast = malloc(sizeof(ast_t));
   ast->type = AST_BINARY;
   ast->binary.left = left;
   ast->binary.right = right;
