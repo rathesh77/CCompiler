@@ -104,8 +104,10 @@ void parse_function(buffer_t *buffer, ast_t *function) {
        //ptr_stmts= ast_list_add(&(ptr_stmts), st);
 
 
-       cursor->node = st;
-       cursor = cursor->next;
+        cursor->node = st;
+        cursor->next = malloc(sizeof(ast_list_t));
+        cursor = cursor->next;
+
       } else if (next_char == '=') {
         st = parse_assignment(buffer);
       } else {
@@ -143,9 +145,12 @@ ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
         return NULL;
       }
       //cursor = ast_list_add(&ptr, ast_new_integer(atol(arg)));
-       cursor->node = ast_new_integer(atol(arg));
-
-       cursor = cursor->next;      
+      cursor->node = ast_new_integer(atol(arg));
+      cursor->next = malloc(sizeof(ast_list_t));
+      cursor = cursor->next;      
+      if (next_char == ')') {
+        break;
+      }
     } else {
       break;
     }
