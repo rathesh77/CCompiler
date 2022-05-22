@@ -76,24 +76,36 @@ ast_t *parse_code(buffer_t *buffer)
   return function;
 }
 
-ast_t *parse_function(buffer_t *buffer, ast_t *function) {
+void parse_function(buffer_t *buffer, ast_t *function) {
   char *lexem = NULL;
-  ast_list_t *head = function->function.stmts;
-  ast_list_t *cursor =  function->function.stmts;
+  ast_list_t *head = NULL;
+  ast_list_t *cursor = NULL;
+
+  if (function->type == AST_FUNCTION) {
+      head = function->function.stmts;
+      cursor =  function->function.stmts;
+
+  } else if (function->type == AST_COMPOUND_STATEMENT) {
+      head = function->compound_stmt.stmts;
+      cursor =  function->compound_stmt.stmts;
+  }
   while (!buf_eof(buffer)) {
     char end_bracket = buf_getchar_after_blank(buffer);
     //buf_lock(buffer);
     //buf_rollback_and_unlock(buffer, 1);
     if (end_bracket == '}') {
       printf("parsing de fonction terminé\n");
-      return function;
+      return;
     }
     buf_lock(buffer);
     buf_rollback_and_unlock(buffer, 1);
     lexem = lexer_getalphanum(buffer);
     ast_t *st = malloc(sizeof(ast_t));
     if (strcmp(lexem, "si") == 0) {
-      st = parse_condition(buffer, cursor);
+      st = parse_condition(buffer);
+      cursor->node = st;
+      cursor->next = malloc(sizeof(ast_list_t));
+      cursor = cursor->next;      
     } else if (strcmp(lexem, "tantque") == 0) {
       st = parse_loop(buffer);
     } else {
@@ -113,16 +125,15 @@ ast_t *parse_function(buffer_t *buffer, ast_t *function) {
         st = parse_assignment(buffer);
       } else {
         printf("error");
-        return NULL;
+        return;
       }
     }
   }
   printf("Accolade manquante de fin de scope courante: %s\n",function->function.name);
-  return NULL;
+  return;
 }
 
-ast_t *parse_condition(buffer_t *buffer, ast_list_t *cursor) {
-  cursor->node = malloc(sizeof(ast_t));
+ast_t *parse_condition(buffer_t *buffer) {
   char left_parenthesis = buf_getchar_after_blank(buffer);
   //buf_unlock(buffer);
   ast_t *wrapper = malloc(sizeof(ast_t));
@@ -177,11 +188,11 @@ ast_t *parse_condition(buffer_t *buffer, ast_list_t *cursor) {
           printf("error lors du parsing de condition\n");
           return NULL;
       }
-      valid_branch = parse_function(buffer, cursor->node);
-      cursor->node = condition;
+      parse_function(buffer, valid_branch);
+      return ast_new_condition(condition, valid_branch, invalid_branch);
       //return ast_new_condition(condition);
   }
-
+  return NULL;
 }
 
 ast_t *parse_loop(buffer_t *buffer) {
