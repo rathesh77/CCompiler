@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <stdbool.h>
 #define DEBUG true
 // #define DEBUG false
 
@@ -14,6 +15,7 @@
 
 #define STREQUAL 0
 
+bool is_letter(char c);
 char *copy_name (char *name);
 void print_backtrace ();
 

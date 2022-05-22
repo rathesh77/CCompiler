@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "utils.h"
 #ifndef WIN32
 #include <unistd.h>
 #include <execinfo.h>
@@ -25,4 +26,8 @@ void print_backtrace ()
   // print out all the frames to stderr
   backtrace_symbols_fd(array, size, STDERR_FILENO);
 #endif /* WIN32 */
+}
+
+bool is_letter(char c) {
+  return ((c) >= ('a') && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
