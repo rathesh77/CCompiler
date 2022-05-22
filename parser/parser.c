@@ -122,7 +122,10 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         cursor = cursor->next;
 
       } else if (next_char == '=') {
-        st = parse_assignment(buffer);
+        st = parse_assignment(buffer, lexem);
+        cursor->node = st;
+        cursor->next = malloc(sizeof(ast_list_t));
+        cursor = cursor->next;        
       } else {
         printf("error");
         return;
@@ -196,10 +199,27 @@ ast_t *parse_condition(buffer_t *buffer) {
 }
 
 ast_t *parse_loop(buffer_t *buffer) {
-
+  
 }
 
-ast_t * parse_assignment(buffer_t *buffer) {
+ast_t * parse_assignment(buffer_t *buffer, char * var_name) {
+
+  char *rvalue = lexer_getalphanum(buffer);
+  ast_t *right;
+  if (is_letter(rvalue[0])) {
+    right = ast_new_variable(rvalue, 0);
+  }
+  else { 
+    right = ast_new_integer(strtol(rvalue, NULL, 10));
+  }
+  
+  char semi_colon = buf_getchar_after_blank(buffer);
+  if (semi_colon == ';') 
+    return ast_new_assignment(ast_new_variable(var_name, 0), right);
+  
+  printf("error lors du parsing d\'assignement\n");
+  return NULL;
+  
 }
 
 ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
