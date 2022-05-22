@@ -25,10 +25,9 @@ void parse_code(buffer_t *buffer)
     {
       char *func_name = lexer_getalphanum(buffer);
       char left_parenthesis = buf_getchar_after_blank(buffer);
-      ast_list_t *params = malloc(sizeof(struct ast_list_t));
-      ast_list_t *stmts;
+      ast_list_t *params = malloc(sizeof(ast_list_t));
+      ast_list_t *stmts = malloc(sizeof(ast_list_t));
       ast_list_t *ptr_params = params;
-      ast_list_t *ptr_stmts = stmts;
 
       if (left_parenthesis != '(')
       {
@@ -45,10 +44,10 @@ void parse_code(buffer_t *buffer)
           return;
         }
         char *param_type = lexer_getalphanum(buffer);
-        ptr_params = ast_list_add(&ptr_params, ast_new_variable(param_name, 0));
-        //ptr_params->node = ast_new_variable(param_name, 0);
-        //ptr_params->next = malloc(sizeof(struct ast_list_t));
-        //ptr_params = ptr_params->next;
+        //ptr_params = ast_list_add(&ptr_params, ast_new_variable(param_name, 0));
+        ptr_params->node = ast_new_variable(param_name, 0);
+        ptr_params->next = malloc(sizeof(ast_list_t));
+        ptr_params = ptr_params->next;
         char next_sym = buf_getchar_after_blank(buffer);
         if (next_sym == ')')
         {
@@ -78,9 +77,8 @@ void parse_code(buffer_t *buffer)
 
 void parse_function(buffer_t *buffer, ast_t *function) {
   char *lexem = NULL;
-  function->function.stmts = malloc(sizeof(struct ast_list_t));
-      ast_list_t *ptr_stmts = function->function.stmts;
-
+  ast_list_t *head = function->function.stmts;
+  ast_list_t *cursor =  function->function.stmts;
   while (!buf_eof(buffer)) {
     char end_bracket = buf_getchar_after_blank(buffer);
     //buf_lock(buffer);
@@ -91,8 +89,8 @@ void parse_function(buffer_t *buffer, ast_t *function) {
     }
     buf_lock(buffer);
     buf_rollback_and_unlock(buffer, 1);
-    char *lexem = lexer_getalphanum(buffer);
-    ast_t *st;
+    lexem = lexer_getalphanum(buffer);
+    ast_t *st = malloc(sizeof(ast_t));
     if (strcmp(lexem, "si") == 0) {
       st = parse_condition(buffer);
     } else if (strcmp(lexem, "pour") == 0) {
@@ -103,7 +101,11 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         st = parse_fncall(buffer, lexem);
          // function->call.args = malloc(sizeof(ast_list_t));
 
-       ptr_stmts= ast_list_add(&(ptr_stmts), st);
+       //ptr_stmts= ast_list_add(&(ptr_stmts), st);
+
+
+       cursor->node = st;
+       cursor = cursor->next;
       } else if (next_char == '=') {
         st = parse_assignment(buffer);
       } else {
@@ -127,10 +129,11 @@ ast_t * parse_assignment(buffer_t *buffer) {
 }
 
 ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
-  ast_t *fn_call = malloc(sizeof(struct ast_t));
+  ast_t *fn_call = malloc(sizeof(ast_t));
   //fn_call = ast_new_fncall(fn_name)
-  ast_list_t args = {};
-  ast_list_t *ptr = &args;
+  ast_list_t *args = malloc(sizeof(ast_list_t));
+  ast_list_t *head = args;
+  ast_list_t *cursor = args;
   while (true) {
     char *arg = lexer_getalphanum(buffer);
     if (strlen(arg) > 0) {
@@ -139,12 +142,15 @@ ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
         printf("error lors du parsing de la function %s\n", fn_name);
         return NULL;
       }
-      ptr = ast_list_add(&ptr, ast_new_integer(atol(arg)));
+      //cursor = ast_list_add(&ptr, ast_new_integer(atol(arg)));
+       cursor->node = ast_new_integer(atol(arg));
+
+       cursor = cursor->next;      
     } else {
       break;
     }
    
   }
-  fn_call = ast_new_fncall(fn_name, &args);
+  fn_call = ast_new_fncall(fn_name, head);
   return fn_call;
 }
