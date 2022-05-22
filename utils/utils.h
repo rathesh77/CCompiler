@@ -16,7 +16,9 @@
 #define STREQUAL 0
 
 bool is_letter(char c);
-char *copy_name (char *name);
+char *copy_name (char *);
 void print_backtrace ();
+bool is_arithmetic_operator(char);
+bool is_logic_operator(char*);
 
 #endif /* ifndef UTILS_H */

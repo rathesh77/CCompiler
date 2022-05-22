@@ -31,3 +31,11 @@ void print_backtrace ()
 bool is_letter(char c) {
   return ((c) >= ('a') && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
+
+bool is_arithmetic_operator(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/';
+}
+
+bool is_logic_operator(char* c) {
+      return strcmp(c, "ET") == 0 || strcmp(c, "OU") == 0;
+}
