@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "../utils/utils.h"
 
-void parse_code(buffer_t *buffer)
+ast_t *parse_code(buffer_t *buffer)
 {
   // presence d'accolades
   // declarations de fonctions (fonction func (a : entier, b: entier ...) {})
@@ -33,7 +33,7 @@ void parse_code(buffer_t *buffer)
       if (left_parenthesis != '(')
       {
         printf("error");
-        return;
+        return NULL;
       }
       while (true)
       {
@@ -42,7 +42,7 @@ void parse_code(buffer_t *buffer)
         if (buf_getchar(buffer) != ':')
         {
           printf("error");
-          return;
+          return NULL;
         }
         char *param_type = lexer_getalphanum(buffer);
         //ptr_params = ast_list_add(&ptr_params, ast_new_variable(param_name, 0));
@@ -54,7 +54,7 @@ void parse_code(buffer_t *buffer)
         {
           if (buf_getchar_after_blank(buffer) != '{') {
             printf("error");
-            return;
+            return NULL;
           }
           printf("declaration fonction parsé\n");
           function = ast_new_function(func_name, 0, params, stmts);
@@ -64,7 +64,7 @@ void parse_code(buffer_t *buffer)
         else if (next_sym != ',')
         {
           printf("error");
-          return;
+          return NULL;
         }
       }
     }
@@ -73,10 +73,10 @@ void parse_code(buffer_t *buffer)
       break;
     }
   }
-  printf("end\n");
+  return function;
 }
 
-void parse_function(buffer_t *buffer, ast_t *function) {
+ast_t *parse_function(buffer_t *buffer, ast_t *function) {
   char *lexem = NULL;
   ast_list_t *head = function->function.stmts;
   ast_list_t *cursor =  function->function.stmts;
@@ -86,15 +86,15 @@ void parse_function(buffer_t *buffer, ast_t *function) {
     //buf_rollback_and_unlock(buffer, 1);
     if (end_bracket == '}') {
       printf("parsing de fonction terminé\n");
-      break;
+      return function;
     }
     buf_lock(buffer);
     buf_rollback_and_unlock(buffer, 1);
     lexem = lexer_getalphanum(buffer);
     ast_t *st = malloc(sizeof(ast_t));
     if (strcmp(lexem, "si") == 0) {
-      st = parse_condition(buffer);
-    } else if (strcmp(lexem, "pour") == 0) {
+      st = parse_condition(buffer, cursor);
+    } else if (strcmp(lexem, "tantque") == 0) {
       st = parse_loop(buffer);
     } else {
       char next_char = buf_getchar_after_blank(buffer);
@@ -113,14 +113,74 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         st = parse_assignment(buffer);
       } else {
         printf("error");
-        return;
+        return NULL;
       }
     }
   }
-  return;
+  printf("Accolade manquante de fin de scope courante: %s\n",function->function.name);
+  return NULL;
 }
 
-ast_t *parse_condition(buffer_t *buffer) {
+ast_t *parse_condition(buffer_t *buffer, ast_list_t *cursor) {
+  cursor->node = malloc(sizeof(ast_t));
+  char left_parenthesis = buf_getchar_after_blank(buffer);
+  //buf_unlock(buffer);
+  ast_t *wrapper = malloc(sizeof(ast_t));
+  ast_t *condition = malloc(sizeof(ast_t));
+  ast_t *valid_branch = malloc(sizeof(ast_t));
+
+  valid_branch->type = AST_COMPOUND_STATEMENT;
+  valid_branch->compound_stmt.stmts = malloc(sizeof(ast_list_t));
+
+  ast_t *invalid_branch = malloc(sizeof(ast_t));
+  
+  invalid_branch->type = AST_COMPOUND_STATEMENT;
+  invalid_branch->compound_stmt.stmts = malloc(sizeof(ast_list_t));
+  
+  ast_binary_e operator = {0};
+
+  if (left_parenthesis != '(') {
+    printf("error lors du parsing de condition\n");
+    return NULL;
+  }
+
+  char *lvalue = lexer_getalphanum(buffer);
+  char next_char = buf_getchar_after_blank(buffer);
+  if (next_char == '<') {
+    next_char = buf_getchar(buffer);
+    if (next_char == '=') {
+      operator.op = "<=";
+    } else if (next_char != '\0' && next_char != ' ') {
+      printf("error lors du parsing de condition\n");
+      return NULL;
+    } else {
+      operator.op = "<";
+    }
+  } else if (next_char == '>') {
+      next_char = buf_getchar(buffer);
+      if (next_char == '=') {
+        operator.op = ">=";
+      } else if (next_char != '\0' && next_char != ' ') {
+        printf("error lors du parsing de condition\n");
+        return NULL;
+      } else {
+          operator.op = ">";
+      }
+  } else if (next_char == '=' && buf_getchar(buffer) == '=') {
+    operator.op = "==";
+  }
+  char *rvalue = lexer_getalphanum(buffer);
+  next_char = buf_getchar_after_blank(buffer);
+  if (next_char == ')') {
+      condition = ast_new_binary(operator, ast_new_variable(lvalue, 0), ast_new_variable(rvalue, 0));
+      if (buf_getchar_after_blank(buffer) != '{') {
+          printf("error lors du parsing de condition\n");
+          return NULL;
+      }
+      valid_branch = parse_function(buffer, cursor->node);
+      cursor->node = condition;
+      //return ast_new_condition(condition);
+  }
 
 }
 
