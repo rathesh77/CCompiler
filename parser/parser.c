@@ -108,6 +108,9 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         return;
       }      
       st = parse_condition(buffer, NULL);
+      if (st == NULL) {
+        return;
+      }
       cursor->node = st;
       cursor->next = malloc(sizeof(ast_list_t));
       cursor = cursor->next;      
@@ -165,7 +168,33 @@ ast_t *parse_condition(buffer_t *buffer, ast_t *binary) {
   ast_binary_e operator = {0};
 
     char *lvalue = lexer_getalphanum(buffer);
+    if (is_logic_operator(lvalue)) {
+      if (binary == NULL) {
+        printf("error lors du parsing de condition\n");
+        return NULL;
+      }
+      operator.op = lvalue;
+      ast_t *right = malloc(sizeof(ast_t));
+      ast_t *new_bin = ast_new_binary(operator, binary, right);
+      return parse_condition(buffer, new_bin);
+    }
     char next_char = buf_getchar_after_blank(buffer);
+    if (next_char == ')') {
+      if (buf_getchar_after_blank(buffer) == '{') {
+        parse_function(buffer, valid_branch);
+        return ast_new_condition(binary, valid_branch, invalid_branch);
+      }
+      buf_lock(buffer);
+      buf_rollback_and_unlock(buffer, 1);
+      return binary;
+    }
+    if (next_char == '(') {
+      if (binary == NULL) {
+          return parse_condition(buffer, parse_condition(buffer, NULL));
+      }
+      ast_t *left = ast_new_binary(binary->binary.op, binary->binary.left, parse_condition(buffer, NULL));
+      return parse_condition(buffer, left);
+    }
     if (next_char == '<') {
       next_char = buf_getchar(buffer);
       if (next_char == '=') {
@@ -192,59 +221,22 @@ ast_t *parse_condition(buffer_t *buffer, ast_t *binary) {
         printf("error lors du parsing de condition\n");
         return NULL;
     }
-    char *rvalue = lexer_getalphanum(buffer);
-    bin = ast_new_binary(operator, ast_new_variable(lvalue, 0), ast_new_variable(rvalue, 0));
-
-    /*if (next_char == ')') {
-      if (buf_getchar_after_blank(buffer) != '{') {
-          printf("error lors du parsing de condition\n");
-          return NULL;
-      }          
-      parse_function(buffer, valid_branch);
-      ast_t *merged_bin = ast_new_binary(operator, binary->binary.left, bin);
-      return ast_new_condition(merged_bin, valid_branch, invalid_branch);
-    }*/
-   
-    char end = buf_getchar_after_blank(buffer);
-    if (end == ')') {
-      if (buf_getchar_after_blank(buffer) == '{') {
-        parse_function(buffer, valid_branch);
-        ast_t *new_bin = ast_new_binary(binary->binary.op, binary->binary.left, bin);
-        return ast_new_condition(new_bin, valid_branch, invalid_branch);
-      } else {
-        printf("error lors du parsing de condition\n");
+    if (strlen(lvalue) == 0 && binary == NULL) {
+      printf("error lors du parsing de condition\n");
         return NULL;
-      }
+    } 
+    char *rvalue = lexer_getalphanum(buffer);
+    if (strcmp(rvalue, "") == 0 || strcmp(rvalue, " ") == 0 || is_logic_operator(rvalue)) {
+      printf("error lors du parsing de condition\n");
+      return NULL;
     }
-    buf_lock(buffer);
-    buf_rollback_and_unlock(buffer, 1);
-    char *logic = lexer_getalphanum(buffer);
-    if (is_logic_operator(logic)) {
-      ast_binary_e op = {.op = logic};
-
-      next_char = buf_getchar_after_blank(buffer);
-      if (next_char == '(') {
-        ast_t *new_bin = ast_new_binary(op, bin->binary.left, bin);
-        return parse_condition(buffer,new_bin);        
-        //return ast_new_condition(ast_new_binary(op, cursor, parse_condition(buffer)), valid_branch, invalid_branch);
-      }      
-      buf_lock(buffer);
-      buf_rollback_and_unlock(buffer, 1);
-      ast_t *right = malloc(sizeof(ast_t)); 
-      if (binary == NULL) {
-        ast_t *new_bin = ast_new_binary(op, bin, right);
-        return parse_condition(buffer,new_bin);
-      } else {
-
-        ast_t *left_part = ast_new_binary(binary->binary.op, binary->binary.left, bin);
-        ast_t *new_bin = ast_new_binary(op, left_part, right);
-        return parse_condition(buffer, new_bin);
-      }
+    if (binary == NULL) {
+      bin = ast_new_binary(operator, ast_new_variable(lvalue, 0), ast_new_variable(rvalue, 0));
+    } else {
+      ast_t *right = ast_new_binary(operator, ast_new_variable(lvalue,0), ast_new_variable(rvalue,0));
+      bin = ast_new_binary(binary->binary.op, binary->binary.left, right);
     }
-    
-  
-
-  return NULL;
+    return parse_condition(buffer, bin);
 }
 
 ast_t *parse_loop(buffer_t *buffer) {
