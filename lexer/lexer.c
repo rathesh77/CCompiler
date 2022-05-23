@@ -36,7 +36,7 @@ char *lexer_getalphanum(buffer_t *buffer) {
 
   if (size == 0) {
     printf("fin de ligne\n");
-    buf_getchar_rollback(buffer);
+    buf_rollback(buffer, 1);
     buf_unlock(buffer);
     //buf_print(buffer);
     return "\0";
