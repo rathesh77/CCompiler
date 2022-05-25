@@ -136,6 +136,27 @@ void parse_function(buffer_t *buffer, ast_t *function) {
     } else if (strcmp(lexem, "tantque") == 0) {
       st = parse_loop(buffer);
     } else {
+      int count = buffer->it;
+      int temp = count;
+      int found = 0;
+      while (true) {
+        char  c = buf_getchar(buffer);
+        if (c == '\n')
+          break;
+        if (c== ';') {
+          count = buffer->it;
+          found = 1;
+          break;
+        }
+        count = buffer->it;
+      }
+      if (found == 0) {
+          printf("point virgule manquant\n");
+          free(function);
+          return;
+      }
+      buf_lock(buffer);
+      buf_rollback_and_unlock(buffer, count - temp);
       char next_char = buf_getchar_after_blank(buffer);
       if (next_char == '(') {
         st = parse_fncall(buffer, lexem);
@@ -165,7 +186,12 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         return;
       }
     }
+    if (st == NULL) {
+      free(function);
+      return;
+    }
   }
+  free(function);
   printf("Accolade manquante de fin de scope courante: %s\n",function->function.name);
   return;
 }
