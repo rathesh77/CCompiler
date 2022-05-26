@@ -1,9 +1,9 @@
 fonction func (var1 : entier, var2: entier) {
     c = ((((20 + 4)) * 134 + 489 +(5 / 94) * 5) +178);
-        test2(functi(26), 22);
-    test3(22);
+        test2(functi(26), c);
+    test3(test2(functi((5 / 94)), c));
     si ((a <= b) ET (( Y >= UI OU ((X  == Z)))) OU d == F ET (P == C)) {
-        toto(15, test3(functi(26), 22),256,84);
+        toto(15, test3(functi(26), 22),6+9,84);
     } sinonsi (d >= xtzq) {
         tata(25);
     } sinon {
