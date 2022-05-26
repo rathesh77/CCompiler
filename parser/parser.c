@@ -80,6 +80,7 @@ void parse_function(buffer_t *buffer, ast_t *function) {
   char *lexem = NULL;
   ast_list_t *head = NULL;
   ast_list_t *cursor = NULL;
+  ast_t *previous = NULL;
 
   if (function->type == AST_FUNCTION) {
       head = function->function.stmts;
@@ -91,8 +92,6 @@ void parse_function(buffer_t *buffer, ast_t *function) {
   }
   while (!buf_eof(buffer)) {
     char end_bracket = buf_getchar_after_blank(buffer);
-    //buf_lock(buffer);
-    //buf_rollback_and_unlock(buffer, 1);
     if (end_bracket == '}') {
       printf("parsing de fonction terminé\n");
       return;
@@ -113,6 +112,7 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       }
       if (buf_getchar_after_blank(buffer) != '{') {
         printf("Accolage fermante manquante apres la condition si\n");
+        return;
       }
 
       ast_t *valid_branch = malloc(sizeof(ast_t));
@@ -130,11 +130,52 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       st = ast_new_condition(st, valid_branch, invalid_branch);
 
       cursor->node = st;
+      previous = st;
       cursor->next = malloc(sizeof(ast_list_t));
       cursor = cursor->next;
 
     } else if (strcmp(lexem, "tantque") == 0) {
       st = parse_loop(buffer);
+    
+    } else if(strcmp(lexem, "sinonsi") == 0) {
+      if (previous->type != AST_CONDITION) {
+        printf("peut pas utiliser une sinonsi sans une precedente sinon\n");
+        return;
+      }
+      if (buf_getchar_after_blank(buffer) != '(') {
+        printf("parenthese ouvrante manquante au debut la condition sinonsi\n");
+        return;
+      }
+      st = parse_condition(buffer, NULL);
+      if (buf_getchar_after_blank(buffer) != '{') {
+        printf("Accolage fermante manquante apres la condition si\n");
+        return;
+      }      
+      ast_t *valid_branch = malloc(sizeof(ast_t));
+
+      valid_branch->type = AST_COMPOUND_STATEMENT;
+      valid_branch->compound_stmt.stmts = malloc(sizeof(ast_list_t));
+
+      ast_t *invalid_branch = malloc(sizeof(ast_t));
+      
+      invalid_branch->type = AST_COMPOUND_STATEMENT;
+      invalid_branch->compound_stmt.stmts = malloc(sizeof(ast_list_t));
+      parse_function(buffer, valid_branch);
+        
+      st = ast_new_condition(st, valid_branch, invalid_branch);
+      previous->branch.invalid = st;
+      previous = st;
+    } else if (strcmp(lexem, "sinon") == 0) {
+      if (previous->type != AST_CONDITION) {
+        printf("peut pas utiliser une sinonsi sans une precedente sinon\n");
+        return;
+      }
+      if (buf_getchar_after_blank(buffer) != '{') {
+        printf("Accolage fermante manquante apres la condition si\n");
+        return;
+      }
+      parse_function(buffer, previous->branch.invalid);
+      //free(previous);
     } else {
       int count = buffer->it;
       int temp = count;
@@ -160,15 +201,12 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       char next_char = buf_getchar_after_blank(buffer);
       if (next_char == '(') {
         st = parse_fncall(buffer, lexem);
-         // function->call.args = malloc(sizeof(ast_list_t));
-
-       //ptr_stmts= ast_list_add(&(ptr_stmts), st);
         if (buf_getchar_after_blank(buffer) != ';') {
           printf("point virgule manquant\n");
           return;
         }
-
         cursor->node = st;
+        previous = st;
         cursor->next = malloc(sizeof(ast_list_t));
         cursor = cursor->next;
 
@@ -179,8 +217,9 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         }
         st = parse_assignment(buffer, lexem);
         cursor->node = st;
+        previous = st;
         cursor->next = malloc(sizeof(ast_list_t));
-        cursor = cursor->next;        
+        cursor = cursor->next;
       } else {
         printf("error");
         return;
@@ -197,19 +236,13 @@ void parse_function(buffer_t *buffer, ast_t *function) {
 }
 
 ast_t *parse_condition(buffer_t *buffer, ast_t *binary) {
-  //buf_unlock(buffer);
   ast_t *bin = malloc(sizeof(ast_t));
 
   ast_binary_e operator = {0};
 
     char *lvalue = lexer_getalphanum(buffer);
     char next_char = buf_getchar_after_blank(buffer);
-    /*if (next_char == ')') {
-      if (buf_getchar_after_blank(buffer) == '}') {
 
-      }
-      return bin;
-    }*/
     if (next_char != '(') {
       if (next_char == '<') {
         next_char = buf_getchar(buffer);
@@ -247,11 +280,9 @@ ast_t *parse_condition(buffer_t *buffer, ast_t *binary) {
         return NULL;
       }
       bin = ast_new_binary(operator, ast_new_variable(lvalue, 0), ast_new_variable(rvalue, 0));
-      
-
+    
     } else {
       bin = parse_condition(buffer, NULL);
-
     }
  
        if (buf_getchar_after_blank(buffer) == ')') {
@@ -262,10 +293,6 @@ ast_t *parse_condition(buffer_t *buffer, ast_t *binary) {
     char *lexem = lexer_getalphanum(buffer);
 
      if (is_logic_operator(lexem)) {
-      /*if (binary == NULL) {
-        printf("error lors du parsing de condition\n");
-        return NULL;
-      }*/
       operator.op = lexem;
       ast_t *right = malloc(sizeof(ast_t));
       ast_t *new_bin = ast_new_binary(operator, bin, right);

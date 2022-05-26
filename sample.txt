@@ -1,10 +1,13 @@
 fonction func (var1 : entier, var2: entier) {
-    test(ab15, functi2(26));
     c = 42;
-    test2(functi(26), 22);
+        test2(functi(26), 22);
     test3(22);
-    si (a <= b ET (b > c OU R == M) OU (d == F)) {
+    si ((a <= b) ET (( Y >= UI OU ((X  == Z)))) OU d == F ET (P == C)) {
         toto(15, test3(functi(26), 22),256,84);
+    } sinonsi (d >= xtzq) {
+        tata(25);
+    } sinon {
+        tete(4568);
     }
     d = 86;
 
