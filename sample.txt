@@ -1,5 +1,5 @@
 fonction func (var1 : entier, var2: entier) {
-    c = 42;
+    c = ((((20 + 4)) * 134 + 489 +(5 / 94) * 5) +178);
         test2(functi(26), 22);
     test3(22);
     si ((a <= b) ET (( Y >= UI OU ((X  == Z)))) OU d == F ET (P == C)) {

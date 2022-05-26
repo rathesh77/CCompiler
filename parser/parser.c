@@ -18,6 +18,7 @@ ast_t *parse_code(buffer_t *buffer)
   // on cherche d'abord une declaration de fonction, si y en a pas, on throw une
   // erreur
   // pour l'instant on ne prend en compte que le type INTEGER pour les variables
+  // NE PAS OUBLIER DE GERER LES TYPES DE RETOUR DES FONCTIONS
   ast_t *function;
   while (buf_eof(buffer) == false)
   {
@@ -325,14 +326,8 @@ ast_t *parse_loop(buffer_t *buffer) {
 
 ast_t * parse_assignment(buffer_t *buffer, char * var_name) {
 
-  char *rvalue = lexer_getalphanum(buffer);
-  ast_t *right;
-  if (is_letter(rvalue[0])) {
-    right = ast_new_variable(rvalue, 0);
-  }
-  else { 
-    right = ast_new_integer(strtol(rvalue, NULL, 10));
-  }
+  //char *rvalue = lexer_getalphanum(buffer);
+  ast_t *right = parse_expr(buffer);
   
   char semi_colon = buf_getchar_after_blank(buffer);
   if (semi_colon == ';') 
@@ -397,4 +392,126 @@ ast_t *parse_arg(buffer_t *buffer) {
     } 
     return ast_new_integer(atol(lexer_getalphanum(buffer)));
     
+}
+
+ast_t *parse_expr(buffer_t *buffer) {
+
+  ast_list_t *expr = malloc(sizeof(ast_list_t));
+  //char *expr = malloc(sizeof(char) * 10);
+  ast_list_t *head= malloc(sizeof(ast_list_t));
+  ast_list_t *cursor = head;
+  int len = 0;
+  while (true) {
+    char next_char = buf_getchar_after_blank(buffer);
+    if (next_char == ';') {
+      buf_lock(buffer);
+      buf_rollback_and_unlock(buffer, 1);
+      break;
+    } else if (next_char == '(') {
+      ast_t *arg = parse_expr(buffer);
+      if ( arg == NULL || buf_getchar_after_blank(buffer) != ')') {
+        printf("manque une parenthese fermante!\n");
+        return NULL;
+      }
+      cursor->node = arg;
+      cursor->next = malloc(sizeof(ast_list_t));
+      cursor = cursor->next;
+      len++;
+      continue;
+    } else if (next_char == ')') {
+      buf_lock(buffer);
+      buf_rollback_and_unlock(buffer, 1);
+      break;
+    }
+    else if (is_arithmetic_operator(next_char)) {  // si on tombe sur +, - ,/ ou *
+      /*if (lhs == NULL) {
+        printf("error lors du parsing d'une expression:\n");
+        return NULL;
+      }*/
+      ast_binary_e operator = {};
+      operator.op = malloc(sizeof(char) * 2);
+      operator.op[0] = next_char;
+      operator.op[1] = '\0';
+      ast_t *bin = ast_new_binary(operator, NULL, NULL);
+      cursor->node = bin;
+      cursor->next = malloc(sizeof(ast_list_t));
+      cursor = cursor->next;
+      len++;
+      continue;
+    }
+    buf_lock(buffer);
+    buf_rollback_and_unlock(buffer, 1);    
+    char *lexem = lexer_getalphanum(buffer);
+    if (is_logic_operator(lexem)) {         // si on tombe sur "ET" ou "OU"
+      buf_lock(buffer);
+      buf_rollback_and_unlock(buffer, strlen(lexem));
+      break;
+    } 
+    buf_lock(buffer);
+    buf_rollback_and_unlock(buffer, strlen(lexem));
+    ast_t *arg = parse_arg(buffer);
+    cursor->node = arg;
+    cursor->next = malloc(sizeof(ast_list_t));
+    cursor = cursor->next;
+    len++;
+
+  }
+  //return parse_expr(buffer, arg);
+  if (len % 2 == 0) {
+    printf("nope\n");
+    return NULL;
+  }
+  return NPI(head, len);
+}
+
+ast_t *NPI(ast_list_t* expr, int len) {
+  if (len ==1 ) {
+    return expr->node;
+  }
+  if (expr == NULL) {
+    return NULL;
+  }
+  ast_t *tree[len];
+  ast_list_t *cursor = expr;
+  int cpt = 0;
+  ast_t *op = NULL;
+  while (cpt < len) {
+    if (cursor->node->type == AST_BINARY && cursor->node->binary.left == NULL &&cursor->node->binary.right == NULL ) {
+      op = cursor->node;
+    } else {
+      tree[cpt] = cursor->node;
+      cpt++;
+      if (op != NULL) {
+        tree[cpt] = op;
+        op = NULL;
+        cpt++;
+      }
+    }
+    
+    cursor = cursor->next;
+  }
+  cpt--;
+  ast_t *final = malloc(sizeof(ast_t));
+  final->type = AST_BINARY;
+
+  ast_t *fcursor = final;
+  fcursor->binary.op = tree[cpt--]->binary.op;
+
+  while (cpt >= 0) {
+    ast_t *right = NULL;
+    ast_t *left = NULL;    
+    
+    right = tree[cpt--];
+    fcursor->binary.right = right;
+
+    if (cpt < 0) {
+      return final;
+    }
+
+    left = tree[cpt--];
+    fcursor->binary.left = left;
+    fcursor = fcursor->binary.left;
+  }
+
+  return final;
 }
