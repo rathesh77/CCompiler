@@ -111,7 +111,7 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         return;
       }
       if (buf_getchar_after_blank(buffer) != '{') {
-        printf("Accolage fermante manquante apres la condition si\n");
+        printf("Accolade fermante manquante apres la condition si\n");
         return;
       }
 
@@ -148,7 +148,7 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       }
       st = parse_condition(buffer, NULL);
       if (buf_getchar_after_blank(buffer) != '{') {
-        printf("Accolage fermante manquante apres la condition si\n");
+        printf("Accolade fermante manquante apres la condition si\n");
         return;
       }      
       ast_t *valid_branch = malloc(sizeof(ast_t));
@@ -167,11 +167,11 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       previous = st;
     } else if (strcmp(lexem, "sinon") == 0) {
       if (previous->type != AST_CONDITION) {
-        printf("peut pas utiliser une sinonsi sans une precedente sinon\n");
+        printf("peut pas utiliser une sinon sans une si/sinonsi\n");
         return;
       }
       if (buf_getchar_after_blank(buffer) != '{') {
-        printf("Accolage fermante manquante apres la condition si\n");
+        printf("Accolade fermante manquante apres la condition si\n");
         return;
       }
       parse_function(buffer, previous->branch.invalid);
