@@ -110,13 +110,18 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         printf("error lors du parsing de condition\n");
         return;
       }      
-      st = parse_condition(buffer, NULL);
+      st = parse_expr(buffer);
       if (st == NULL) {
         return;
       }
-      if (buf_getchar_after_blank(buffer) != '{') {
-        printf("Accolade fermante manquante apres la condition si\n");
-        return;
+      if (buf_getchar_after_blank(buffer) == ')') {
+        if (buf_getchar_after_blank(buffer) != '{') {
+          printf("Accolade fermante manquante apres la condition si\n");
+          return;
+        }
+      } else {
+           printf("Accolade fermante manquante apres la condition si\n");
+          return;
       }
 
       ast_t *valid_branch = malloc(sizeof(ast_t));
@@ -144,11 +149,16 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         printf("parenthese ouvrante manquante au debut d\'une tantque\n");
         return;
       }
-      st = parse_condition(buffer, NULL);
+      st = parse_expr(buffer);
       ast_t *loop = ast_new_loop(st, malloc(sizeof(ast_list_t)));
-      if (buf_getchar_after_blank(buffer) != '{') {
-        printf("Accolade ouvrante manquante apres la tantque\n");
-        return;
+        if (buf_getchar_after_blank(buffer) == ')') {
+        if (buf_getchar_after_blank(buffer) != '{') {
+          printf("Accolade fermante manquante apres la condition si\n");
+          return;
+        }
+      } else {
+           printf("Accolade fermante manquante apres la condition si\n");
+          return;
       }
       parse_function(buffer, loop);
       cursor->node = loop;
@@ -156,19 +166,26 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       cursor->next = malloc(sizeof(ast_list_t));
       cursor = cursor->next;
     } else if(strcmp(lexem, "sinonsi") == 0) {
+      char left_parenthesis = buf_getchar_after_blank(buffer);
+      if (left_parenthesis != '(') {
+        printf("error lors du parsing de condition\n");
+        return;
+      }            
       if (previous->type != AST_CONDITION) {
         printf("peut pas utiliser une sinonsi sans une precedente sinon\n");
         return;
       }
-      if (buf_getchar_after_blank(buffer) != '(') {
-        printf("parenthese ouvrante manquante au debut la condition sinonsi\n");
-        return;
+
+      st = parse_expr(buffer);
+      if (buf_getchar_after_blank(buffer) == ')') {
+        if (buf_getchar_after_blank(buffer) != '{') {
+          printf("Accolade fermante manquante apres la condition sinonsi\n");
+          return;
+        }
+      } else {
+          printf("Accolade fermante manquante apres la condition sinonsi\n");
+          return;
       }
-      st = parse_condition(buffer, NULL);
-      if (buf_getchar_after_blank(buffer) != '{') {
-        printf("Accolade fermante manquante apres la condition si\n");
-        return;
-      }      
       ast_t *valid_branch = malloc(sizeof(ast_t));
 
       valid_branch->type = AST_COMPOUND_STATEMENT;
@@ -253,77 +270,6 @@ void parse_function(buffer_t *buffer, ast_t *function) {
   return;
 }
 
-ast_t *parse_condition(buffer_t *buffer, ast_t *binary) {
-  ast_t *bin = malloc(sizeof(ast_t));
-
-  ast_binary_e operator = {0};
-
-    char *lvalue = lexer_getalphanum(buffer);
-    char next_char = buf_getchar_after_blank(buffer);
-
-    if (next_char != '(') {
-      if (next_char == '<') {
-        next_char = buf_getchar(buffer);
-        if (next_char == '=') {
-          operator.op = "<=";
-        } else if (next_char != '\0' && next_char != ' ') {
-          printf("error lors du parsing de condition\n");
-          return NULL;
-        } else {
-          operator.op = "<";
-        }
-      } else if (next_char == '>') {
-          next_char = buf_getchar(buffer);
-          if (next_char == '=') {
-            operator.op = ">=";
-          } else if (next_char != '\0' && next_char != ' ') {
-            printf("error lors du parsing de condition\n");
-            return NULL;
-          } else {
-              operator.op = ">";
-          }
-      } else if (next_char == '=' && buf_getchar(buffer) == '=') {
-        operator.op = "==";
-      } else {
-          printf("error lors du parsing de condition\n");
-          return NULL;
-      }
-      if (strlen(lvalue) == 0 && binary == NULL) {
-        printf("error lors du parsing de condition\n");
-          return NULL;
-      } 
-      char *rvalue = lexer_getalphanum(buffer);
-      if (strcmp(rvalue, "") == 0 || strcmp(rvalue, " ") == 0 || is_logic_operator(rvalue)) {
-        printf("error lors du parsing de condition\n");
-        return NULL;
-      }
-      bin = ast_new_binary(operator, ast_new_variable(lvalue, 0), ast_new_variable(rvalue, 0));
-    
-    } else {
-      bin = parse_condition(buffer, NULL);
-    }
- 
-       if (buf_getchar_after_blank(buffer) == ')') {
-        return bin;
-      }
-      buf_lock(buffer);
-      buf_rollback_and_unlock(buffer, 1);
-    char *lexem = lexer_getalphanum(buffer);
-
-     if (is_logic_operator(lexem)) {
-      operator.op = lexem;
-      ast_t *right = malloc(sizeof(ast_t));
-      ast_t *new_bin = ast_new_binary(operator, bin, right);
-      return ast_new_binary(operator, bin, parse_condition(buffer, NULL));
-    }
-    
-    return bin;
-}
-
-ast_t *parse_loop(buffer_t *buffer) {
-  
-}
-
 ast_t * parse_assignment(buffer_t *buffer, char * var_name) {
 
   //char *rvalue = lexer_getalphanum(buffer);
@@ -380,12 +326,8 @@ ast_t *parse_arg(buffer_t *buffer) {
         buf_getchar(buffer);
         return parse_fncall(buffer, arg);
       }
-      else if (next_char == ',' || next_char == ')') {
         return ast_new_variable(arg, 0);
-      } else {
-        printf("error lors du parsing d'un argument: %s\n", arg);
-        return NULL;
-      }
+      
       
 
       //char *arg = lexer_getalphanum(buffer);
@@ -443,10 +385,55 @@ ast_t *parse_expr(buffer_t *buffer) {
     buf_rollback_and_unlock(buffer, 1);    
     char *lexem = lexer_getalphanum(buffer);
     if (is_logic_operator(lexem)) {         // si on tombe sur "ET" ou "OU"
-      buf_lock(buffer);
-      buf_rollback_and_unlock(buffer, strlen(lexem));
-      break;
-    } 
+        ast_binary_e operator = {};
+        operator.op = lexem;
+
+        ast_t *bin = ast_new_binary(operator, NULL, NULL);
+        cursor->node = bin;
+        cursor->next = malloc(sizeof(ast_list_t));
+        cursor = cursor->next;
+        len++;
+        continue;      
+    }
+    if (strlen(lexem) == 0) {
+        char next_char = buf_getchar(buffer);
+        char *comp_op = malloc(sizeof(char) * 2);
+        if (next_char == '<') {
+          next_char = buf_getchar(buffer);
+          if (next_char == '=') {
+            comp_op = "<=";
+          } else if (next_char != '\0' && next_char != ' ') {
+            printf("error lors du parsing de condition\n");
+            return NULL;
+          } else {
+            comp_op = "<";
+          }
+        } else if (next_char == '>') {
+            next_char = buf_getchar(buffer);
+            if (next_char == '=') {
+              comp_op = ">=";
+            } else if (next_char != '\0' && next_char != ' ') {
+              printf("error lors du parsing de condition\n");
+              return NULL;
+            } else {
+                comp_op= ">";
+            }
+        } else if (next_char == '=' && buf_getchar(buffer) == '=') {
+          comp_op = "==";
+        } else {
+          printf("error toto\n");
+          return NULL;
+        }
+        ast_binary_e operator = {};
+        operator.op = comp_op;
+
+        ast_t *bin = ast_new_binary(operator, NULL, NULL);
+        cursor->node = bin;
+        cursor->next = malloc(sizeof(ast_list_t));
+        cursor = cursor->next;
+        len++;
+        continue;
+    }
     buf_lock(buffer);
     buf_rollback_and_unlock(buffer, strlen(lexem));
     ast_t *arg = parse_arg(buffer);
