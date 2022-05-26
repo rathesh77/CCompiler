@@ -81,12 +81,12 @@ ast_t *ast_new_condition(ast_t *condition, ast_t *valid, ast_t *invalid)
 
   return ast;
 }
-ast_t *ast_new_loop(ast_t *condition, ast_t *stmt)
+ast_t *ast_new_loop(ast_t *condition, ast_list_t *stmts)
 {
   ast_t *ast = malloc(sizeof(ast_t));
   ast->type = AST_LOOP;
   ast->loop.condition = condition;
-  ast->loop.stmt = stmt;
+  ast->loop.stmts = stmts;
 
   return ast;
 }

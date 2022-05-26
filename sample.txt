@@ -9,6 +9,11 @@ fonction func (var1 : entier, var2: entier) {
     } sinon {
         tete(4568);
     }
+
+    tantque (a > b) {
+        test(4);
+        z = 359;
+    }
     d = 86;
 
 }

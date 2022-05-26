@@ -89,7 +89,10 @@ void parse_function(buffer_t *buffer, ast_t *function) {
   } else if (function->type == AST_COMPOUND_STATEMENT) {
       head = function->compound_stmt.stmts;
       cursor =  function->compound_stmt.stmts;
-  }
+  } else if (function->type == AST_LOOP) {
+      head = function->loop.stmts;
+      cursor =  function->loop.stmts;
+  } 
   while (!buf_eof(buffer)) {
     char end_bracket = buf_getchar_after_blank(buffer);
     if (end_bracket == '}') {
@@ -135,8 +138,22 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       cursor = cursor->next;
 
     } else if (strcmp(lexem, "tantque") == 0) {
-      st = parse_loop(buffer);
-    
+
+      if (buf_getchar_after_blank(buffer) != '(') {
+        printf("parenthese ouvrante manquante au debut d\'une tantque\n");
+        return;
+      }
+      st = parse_condition(buffer, NULL);
+      ast_t *loop = ast_new_loop(st, malloc(sizeof(ast_list_t)));
+      if (buf_getchar_after_blank(buffer) != '{') {
+        printf("Accolade ouvrante manquante apres la tantque\n");
+        return;
+      }
+      parse_function(buffer, loop);
+      cursor->node = loop;
+      previous = loop;
+      cursor->next = malloc(sizeof(ast_list_t));
+      cursor = cursor->next;
     } else if(strcmp(lexem, "sinonsi") == 0) {
       if (previous->type != AST_CONDITION) {
         printf("peut pas utiliser une sinonsi sans une precedente sinon\n");
