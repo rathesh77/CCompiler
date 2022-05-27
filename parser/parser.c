@@ -66,7 +66,7 @@ ast_t *parse_code(buffer_t *buffer)
             return NULL;
           }
           printf("declaration fonction parsé\n");
-          function = ast_new_function(func_name, 0, params, stmts);
+          function = ast_new_function(func_name, strcmp(ret, "entier") == 0 ? 0 : -1, params, stmts);
           parse_function(buffer, function);
           break;
         }
