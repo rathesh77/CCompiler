@@ -484,6 +484,5 @@ ast_t *NPI(ast_list_t* expr, int len) {
     fcursor->binary.left = left;
     fcursor = fcursor->binary.left;
   }
-  free(fcursor);
   return final;
 }
