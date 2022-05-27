@@ -21,7 +21,6 @@ char *lexer_getalphanum(buffer_t *buffer) {
   buf_lock(buffer);
   char c = buf_getchar(buffer);
 
-  int end = 0;
   int offset = 1;
   while (is_num(c) || is_letter(c)) {
     size++;
@@ -35,16 +34,13 @@ char *lexer_getalphanum(buffer_t *buffer) {
   }
 
   if (size == 0) {
-    printf("fin de ligne\n");
     buf_rollback(buffer, 1);
     buf_unlock(buffer);
-    //buf_print(buffer);
     return "\0";
   }
 
   char *out = malloc(size);
   char *first_ptr = out;
-  //printf("size:%d\n", size);
 
   buf_rollback(buffer, size + offset);
 
@@ -65,7 +61,6 @@ char *lexer_getalphanum_rollback(buffer_t *buffer) {
   buf_lock(buffer);
   buf_rollback(buffer, buffer->it - initial_pos);
   buf_unlock(buffer);
-  // printf("%d, %d\n", buffer->it, initial_pos);
   return out;
 }
 

@@ -46,7 +46,6 @@ ast_t *parse_code(buffer_t *buffer)
           return NULL;
         }
         char *param_type = lexer_getalphanum(buffer);
-        //ptr_params = ast_list_add(&ptr_params, ast_new_variable(param_name, 0));
         ptr_params->node = ast_new_variable(param_name, 0);
         ptr_params->next = malloc(sizeof(ast_list_t));
         ptr_params = ptr_params->next;
@@ -79,19 +78,15 @@ ast_t *parse_code(buffer_t *buffer)
 
 void parse_function(buffer_t *buffer, ast_t *function) {
   char *lexem = NULL;
-  ast_list_t *head = NULL;
   ast_list_t *cursor = NULL;
   ast_t *previous = NULL;
 
   if (function->type == AST_FUNCTION) {
-      head = function->function.stmts;
       cursor =  function->function.stmts;
 
   } else if (function->type == AST_COMPOUND_STATEMENT) {
-      head = function->compound_stmt.stmts;
       cursor =  function->compound_stmt.stmts;
   } else if (function->type == AST_LOOP) {
-      head = function->loop.stmts;
       cursor =  function->loop.stmts;
   } 
   while (!buf_eof(buffer)) {
@@ -210,7 +205,6 @@ void parse_function(buffer_t *buffer, ast_t *function) {
         return;
       }
       parse_function(buffer, previous->branch.invalid);
-      //free(previous);
     } else {
       int count = buffer->it;
       int temp = count;
@@ -240,10 +234,6 @@ void parse_function(buffer_t *buffer, ast_t *function) {
           printf("point virgule manquant\n");
           return;
         }
-        cursor->node = st;
-        previous = st;
-        cursor->next = malloc(sizeof(ast_list_t));
-        cursor = cursor->next;
 
       } else if (next_char == '=') {
         if (!is_letter(lexem[0])) {
@@ -251,14 +241,14 @@ void parse_function(buffer_t *buffer, ast_t *function) {
           return;
         }
         st = parse_assignment(buffer, lexem);
-        cursor->node = st;
-        previous = st;
-        cursor->next = malloc(sizeof(ast_list_t));
-        cursor = cursor->next;
       } else {
         printf("error");
         return;
       }
+        cursor->node = st;
+        previous = st;
+        cursor->next = malloc(sizeof(ast_list_t));
+        cursor = cursor->next;
     }
     if (st == NULL) {
       free(function);
@@ -272,7 +262,6 @@ void parse_function(buffer_t *buffer, ast_t *function) {
 
 ast_t * parse_assignment(buffer_t *buffer, char * var_name) {
 
-  //char *rvalue = lexer_getalphanum(buffer);
   ast_t *right = parse_expr(buffer);
   
   char semi_colon = buf_getchar_after_blank(buffer);
@@ -286,7 +275,6 @@ ast_t * parse_assignment(buffer_t *buffer, char * var_name) {
 
 ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
   ast_t *fn_call = malloc(sizeof(ast_t));
-  //fn_call = ast_new_fncall(fn_name)
   ast_list_t *args = malloc(sizeof(ast_list_t));
   ast_list_t *head = args;
   ast_list_t *cursor = args;
@@ -297,9 +285,8 @@ ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
       printf("error lors du parsing de la function %s\n", fn_name);
       return NULL;
     }
-    //cursor = ast_list_add(&ptr, ast_new_integer(atol(arg)));
     if (arg != NULL) {
-      cursor->node = arg; //ast_new_integer(atol(arg));
+      cursor->node = arg;
       cursor->next = malloc(sizeof(ast_list_t));
       cursor = cursor->next;
     }      
@@ -327,10 +314,6 @@ ast_t *parse_arg(buffer_t *buffer) {
         return parse_fncall(buffer, arg);
       }
         return ast_new_variable(arg, 0);
-      
-      
-
-      //char *arg = lexer_getalphanum(buffer);
     } 
     return ast_new_integer(atol(lexer_getalphanum(buffer)));
     
@@ -338,8 +321,6 @@ ast_t *parse_arg(buffer_t *buffer) {
 
 ast_t *parse_expr(buffer_t *buffer) {
 
-  ast_list_t *expr = malloc(sizeof(ast_list_t));
-  //char *expr = malloc(sizeof(char) * 10);
   ast_list_t *head= malloc(sizeof(ast_list_t));
   ast_list_t *cursor = head;
   int len = 0;
@@ -366,10 +347,6 @@ ast_t *parse_expr(buffer_t *buffer) {
       break;
     }
     else if (is_arithmetic_operator(next_char)) {  // si on tombe sur +, - ,/ ou *
-      /*if (lhs == NULL) {
-        printf("error lors du parsing d'une expression:\n");
-        return NULL;
-      }*/
       ast_binary_e operator = {};
       operator.op = malloc(sizeof(char) * 2);
       operator.op[0] = next_char;
@@ -421,7 +398,7 @@ ast_t *parse_expr(buffer_t *buffer) {
         } else if (next_char == '=' && buf_getchar(buffer) == '=') {
           comp_op = "==";
         } else {
-          printf("error toto\n");
+          printf("error\n");
           return NULL;
         }
         ast_binary_e operator = {};
@@ -443,9 +420,8 @@ ast_t *parse_expr(buffer_t *buffer) {
     len++;
 
   }
-  //return parse_expr(buffer, arg);
   if (len % 2 == 0) {
-    printf("nope\n");
+    printf("nombre insuffisant de membre dans l\'expression\n");
     return NULL;
   }
   return NPI(head, len);
@@ -499,6 +475,6 @@ ast_t *NPI(ast_list_t* expr, int len) {
     fcursor->binary.left = left;
     fcursor = fcursor->binary.left;
   }
-
+  free(fcursor);
   return final;
 }
