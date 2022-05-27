@@ -52,8 +52,17 @@ ast_t *parse_code(buffer_t *buffer)
         char next_sym = buf_getchar_after_blank(buffer);
         if (next_sym == ')')
         {
+          if (buf_getchar_after_blank(buffer) != ':') {
+            printf("Type de retour requis\n");
+            return NULL;
+          }
+          char *ret = lexer_getalphanum(buffer);
+          if (strcmp(ret, "entier") != 0 && strcmp(ret, "rien") != 0) {
+            printf("Type de retour inconnu\n");
+            return NULL;
+          }
           if (buf_getchar_after_blank(buffer) != '{') {
-            printf("error");
+            printf("Accolade ouvrante requis\n");
             return NULL;
           }
           printf("declaration fonction parsé\n");
