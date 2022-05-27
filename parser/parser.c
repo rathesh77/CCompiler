@@ -450,9 +450,10 @@ ast_t *NPI(ast_list_t* expr, int len) {
   ast_t *stack[len];
   ast_t *out[len];
 
-  int i = 1;
+  int i = 0;
   int cpt = len -1;
   stack[0] = expr->node;
+  cursor = cursor->next;  
   while (cursor != NULL && i < len) {
     //if (cursor->node->type == AST_BINARY) {
       if (is_higher_precedence(cursor->node, stack[i])) {
@@ -465,9 +466,55 @@ ast_t *NPI(ast_list_t* expr, int len) {
       }
     //} 
   }
-  return malloc(sizeof(ast_t));
+  i--;
+  while (i >= 0) {
+    out[cpt--] = stack[i--];
+  }
+  cpt = 0;
+  ast_t *final = malloc(sizeof(ast_t));
+  final->type = AST_BINARY;
+
+  ast_t *fcursor = final;
+  fcursor->binary.op = out[cpt++]->binary.op;
+
+  while (cpt < len) {
+    ast_t *right = NULL;
+    ast_t *left = NULL;    
+    
+    right = out[cpt++];
+    fcursor->binary.right = right;
+
+    if (cpt == len) {
+      return final;
+    }
+
+    left = out[cpt++];
+    fcursor->binary.left = left;
+    fcursor = fcursor->binary.left;
+  }
+  return final;
 }
 
 bool is_higher_precedence(ast_t *a, ast_t *b) {
+  /*char *left = NULL;
+  char *right = NULL;  
+  if (a->type == AST_BINARY) {
+    left = a->binary.op.op;  
+  } else if (a->type == AST_INTEGER) {
+    left = a->integer;
+  } else {
+    left = a->var.name;
+  }
+
+  if (b->type == AST_BINARY) {
+    right = b->binary.op.op;  
+  } else if (b->type == AST_INTEGER){
+    right = b->integer;
+  } else {
+    right = b->var.name;
+
+  }
+*/
+
   return true;
 }
