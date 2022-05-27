@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../utils/utils.h"
+#include "../dictionnary/dictionnary.h"
 
 ast_t *parse_code(buffer_t *buffer)
 {
@@ -23,7 +24,7 @@ ast_t *parse_code(buffer_t *buffer)
   while (buf_eof(buffer) == false)
   {
     char *lexem = lexer_getalphanum(buffer);
-    if (strcmp("fonction", lexem) == 0)
+    if (strcmp(FUNCTION, lexem) == 0)
     {
       char *func_name = lexer_getalphanum(buffer);
       char left_parenthesis = buf_getchar_after_blank(buffer);
@@ -57,7 +58,7 @@ ast_t *parse_code(buffer_t *buffer)
             return NULL;
           }
           char *ret = lexer_getalphanum(buffer);
-          if (strcmp(ret, "entier") != 0 && strcmp(ret, "rien") != 0) {
+          if (strcmp(ret, INTEGER) != 0 && strcmp(ret, VOID) != 0) {
             printf("Type de retour inconnu\n");
             return NULL;
           }
@@ -66,7 +67,7 @@ ast_t *parse_code(buffer_t *buffer)
             return NULL;
           }
           printf("declaration fonction parsé\n");
-          function = ast_new_function(func_name, strcmp(ret, "entier") == 0 ? 0 : -1, params, stmts);
+          function = ast_new_function(func_name, strcmp(ret, INTEGER) == 0 ? 0 : -1, params, stmts);
           parse_function(buffer, function);
           break;
         }
@@ -108,7 +109,7 @@ void parse_function(buffer_t *buffer, ast_t *function) {
     buf_rollback_and_unlock(buffer, 1);
     lexem = lexer_getalphanum(buffer);
     ast_t *st = malloc(sizeof(ast_t));
-    if (strcmp(lexem, "si") == 0) {
+    if (strcmp(lexem, IF) == 0) {
       char left_parenthesis = buf_getchar_after_blank(buffer);
       if (left_parenthesis != '(') {
         printf("error lors du parsing de condition\n");
@@ -169,7 +170,7 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       previous = loop;
       cursor->next = malloc(sizeof(ast_list_t));
       cursor = cursor->next;
-    } else if(strcmp(lexem, "sinonsi") == 0) {
+    } else if(strcmp(lexem, ELSE_IF) == 0) {
       char left_parenthesis = buf_getchar_after_blank(buffer);
       if (left_parenthesis != '(') {
         printf("error lors du parsing de condition\n");
@@ -204,7 +205,7 @@ void parse_function(buffer_t *buffer, ast_t *function) {
       st = ast_new_condition(st, valid_branch, invalid_branch);
       previous->branch.invalid = st;
       previous = st;
-    } else if (strcmp(lexem, "sinon") == 0) {
+    } else if (strcmp(lexem, ELSE) == 0) {
       if (previous->type != AST_CONDITION) {
         printf("peut pas utiliser une sinon sans une si/sinonsi\n");
         return;

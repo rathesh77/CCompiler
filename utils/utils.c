@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <execinfo.h>
 #endif
+#include "../dictionnary/dictionnary.h"
 
 char *copy_name (char *name)
 {
@@ -33,9 +34,9 @@ bool is_letter(char c) {
 }
 
 bool is_arithmetic_operator(char c) {
-    return c == '+' || c == '-' || c == '*' || c == '/';
+    return c == PLUS || c == MINUS || c == MULT || c == DIVISION;
 }
 
 bool is_logic_operator(char* c) {
-      return strcmp(c, "ET") == 0 || strcmp(c, "OU") == 0;
+      return strcmp(c, AND) == 0 || strcmp(c, OR) == 0;
 }
