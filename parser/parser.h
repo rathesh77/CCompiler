@@ -12,3 +12,4 @@ ast_t *parse_fncall(buffer_t *, char *);
 ast_t *parse_arg(buffer_t *);
 ast_t *parse_expr(buffer_t *);
 ast_t *NPI(ast_list_t*, int);
+bool is_higher_precedence(ast_t *, ast_t *);

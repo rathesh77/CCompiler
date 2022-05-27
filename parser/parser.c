@@ -1,9 +1,10 @@
-#include "parser.h"
-
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
 #include "../utils/utils.h"
 #include "../dictionnary/dictionnary.h"
+#include "parser.h"
 
 ast_t *parse_code(buffer_t *buffer)
 {
@@ -444,46 +445,29 @@ ast_t *NPI(ast_list_t* expr, int len) {
   if (expr == NULL) {
     return NULL;
   }
-  ast_t *tree[len];
+
   ast_list_t *cursor = expr;
-  int cpt = 0;
-  ast_t *op = NULL;
-  while (cpt < len) {
-    if (cursor->node->type == AST_BINARY && cursor->node->binary.left == NULL &&cursor->node->binary.right == NULL ) {
-      op = cursor->node;
-    } else {
-      tree[cpt] = cursor->node;
-      cpt++;
-      if (op != NULL) {
-        tree[cpt] = op;
-        op = NULL;
-        cpt++;
+  ast_t *stack[len];
+  ast_t *out[len];
+
+  int i = 1;
+  int cpt = len -1;
+  stack[0] = expr->node;
+  while (cursor != NULL && i < len) {
+    //if (cursor->node->type == AST_BINARY) {
+      if (is_higher_precedence(cursor->node, stack[i])) {
+        stack[++i] = cursor->node;
+        cursor = cursor->next;
+      } else {
+        out[cpt--] = stack[i];
+        stack[i] = NULL;
+        //stack[i] = cursor->node;
       }
-    }
-    
-    cursor = cursor->next;
+    //} 
   }
-  cpt--;
-  ast_t *final = malloc(sizeof(ast_t));
-  final->type = AST_BINARY;
+  return malloc(sizeof(ast_t));
+}
 
-  ast_t *fcursor = final;
-  fcursor->binary.op = tree[cpt--]->binary.op;
-
-  while (cpt >= 0) {
-    ast_t *right = NULL;
-    ast_t *left = NULL;    
-    
-    right = tree[cpt--];
-    fcursor->binary.right = right;
-
-    if (cpt < 0) {
-      return final;
-    }
-
-    left = tree[cpt--];
-    fcursor->binary.left = left;
-    fcursor = fcursor->binary.left;
-  }
-  return final;
+bool is_higher_precedence(ast_t *a, ast_t *b) {
+  return true;
 }
