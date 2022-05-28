@@ -5,6 +5,7 @@
 #include "../utils/utils.h"
 #include "../dictionnary/dictionnary.h"
 #include "parser.h"
+#include "../precedence_table.h"
 
 ast_t *parse_code(buffer_t *buffer)
 {
@@ -334,6 +335,8 @@ ast_t *parse_expr(buffer_t *buffer) {
 
   ast_list_t *head= malloc(sizeof(ast_list_t));
   ast_list_t *cursor = head;
+  ast_list_t *previous = head;
+
   int len = 0;
   while (true) {
     char next_char = buf_getchar_after_blank(buffer);
@@ -349,6 +352,7 @@ ast_t *parse_expr(buffer_t *buffer) {
       }
       cursor->node = arg;
       cursor->next = malloc(sizeof(ast_list_t));
+      previous = cursor;
       cursor = cursor->next;
       len++;
       continue;
@@ -365,6 +369,7 @@ ast_t *parse_expr(buffer_t *buffer) {
       ast_t *bin = ast_new_binary(operator, NULL, NULL);
       cursor->node = bin;
       cursor->next = malloc(sizeof(ast_list_t));
+      previous = cursor;
       cursor = cursor->next;
       len++;
       continue;
@@ -379,6 +384,7 @@ ast_t *parse_expr(buffer_t *buffer) {
         ast_t *bin = ast_new_binary(operator, NULL, NULL);
         cursor->node = bin;
         cursor->next = malloc(sizeof(ast_list_t));
+        previous = cursor;
         cursor = cursor->next;
         len++;
         continue;      
@@ -418,6 +424,8 @@ ast_t *parse_expr(buffer_t *buffer) {
         ast_t *bin = ast_new_binary(operator, NULL, NULL);
         cursor->node = bin;
         cursor->next = malloc(sizeof(ast_list_t));
+      previous = cursor;
+
         cursor = cursor->next;
         len++;
         continue;
@@ -427,6 +435,8 @@ ast_t *parse_expr(buffer_t *buffer) {
     ast_t *arg = parse_arg(buffer);
     cursor->node = arg;
     cursor->next = malloc(sizeof(ast_list_t));
+      previous = cursor;
+
     cursor = cursor->next;
     len++;
 
@@ -435,6 +445,7 @@ ast_t *parse_expr(buffer_t *buffer) {
     printf("nombre insuffisant de membre dans l\'expression\n");
     return NULL;
   }
+  previous->next = NULL;
   return NPI(head, len);
 }
 
@@ -447,30 +458,33 @@ ast_t *NPI(ast_list_t* expr, int len) {
   }
 
   ast_list_t *cursor = expr;
-  ast_t *stack[len];
+  ast_t *stack[len+1];
   ast_t *out[len];
 
   int i = 0;
   int cpt = len -1;
-  stack[0] = expr->node;
-  cursor = cursor->next;  
+  stack[0] = NULL;
   while (cursor != NULL && i < len) {
+
     //if (cursor->node->type == AST_BINARY) {
-      if (is_higher_precedence(cursor->node, stack[i])) {
+      if (stack[i] == NULL || is_higher_precedence(cursor->node, stack[i])) {
         stack[++i] = cursor->node;
         cursor = cursor->next;
       } else {
-        out[cpt--] = stack[i];
-        stack[i] = NULL;
+   
+        do {
+          out[cpt--] = stack[i];
+          stack[i] = NULL;
+          i--;
+        } while (stack[i] != NULL && is_higher_precedence(stack[i], out[cpt+1]));
         //stack[i] = cursor->node;
       }
     //} 
   }
-  i--;
-  while (i >= 0) {
+  while (i > 0) {
     out[cpt--] = stack[i--];
   }
-  cpt = 0;
+  cpt++;
   ast_t *final = malloc(sizeof(ast_t));
   final->type = AST_BINARY;
 
@@ -496,25 +510,45 @@ ast_t *NPI(ast_list_t* expr, int len) {
 }
 
 bool is_higher_precedence(ast_t *a, ast_t *b) {
-  /*char *left = NULL;
-  char *right = NULL;  
+  char *left = malloc(sizeof(char)* 3);
+  char *right =  malloc(sizeof(char)* 3);  
   if (a->type == AST_BINARY) {
     left = a->binary.op.op;  
-  } else if (a->type == AST_INTEGER) {
-    left = a->integer;
-  } else {
-    left = a->var.name;
-  }
+  } else if (a->type == AST_INTEGER || a->type == AST_VARIABLE) {
+        left= "VAR";
 
+  }
+  
   if (b->type == AST_BINARY) {
     right = b->binary.op.op;  
-  } else if (b->type == AST_INTEGER){
-    right = b->integer;
-  } else {
-    right = b->var.name;
+  } else if (b->type == AST_INTEGER || b->type == AST_VARIABLE){
+    right = "VAR";
+  } 
+  int left_rank = 8;
+  int right_rank = 8;
 
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 4; j++) {
+      if (table[i][j] == NULL) {
+        break;
+      }
+      if (strcmp(table[i][j], left) == 0) {
+        left_rank = 8 - i;
+      }
+      if (strcmp(table[i][j],right) == 0) {
+        right_rank = 8 - i;
+      }
+    }
   }
-*/
-
-  return true;
+  
+  /*if (a->type == AST_BINARY && (b->type == AST_VARIABLE || b->type == AST_INTEGER)) {
+    return true;
+  } else if (b->type == AST_BINARY && (a->type == AST_VARIABLE || a->type == AST_INTEGER)) {
+    return false;
+  }
+  if (a->type == AST_BINARY && b->type == AST_BINARY) {
+    
+  }*/
+  
+  return left_rank > right_rank;
 }
