@@ -1,4 +1,7 @@
-char* table[8][4] = {
+#define TABLE_LEVELS 9
+
+char* table[TABLE_LEVELS][4] = {
+    {"("},
     {"VAR"},
     {"*", "/"},
     {"+", "-"},

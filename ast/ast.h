@@ -41,7 +41,7 @@ typedef struct ast_t
     } binary;
     struct
     {
-      char op;
+      char *op;
       struct ast_t *operand;
     } unary;
     struct

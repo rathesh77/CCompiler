@@ -350,7 +350,11 @@ ast_t *parse_expr(buffer_t *buffer) {
         printf("manque une parenthese fermante!\n");
         return NULL;
       }
-      cursor->node = arg;
+      ast_t* unary_parenthese = malloc(sizeof(ast_t));
+      unary_parenthese->type = AST_UNARY;
+      unary_parenthese->unary.op = "(";
+      unary_parenthese->unary.operand = arg;
+      cursor->node = unary_parenthese;
       cursor->next = malloc(sizeof(ast_list_t));
       previous = cursor;
       cursor = cursor->next;
@@ -485,7 +489,7 @@ ast_t *NPI(ast_list_t* expr, int len) {
     out[cpt--] = stack[i--];
   }
   cpt++;
-  ast_t *final = malloc(sizeof(ast_t));
+  /*ast_t *final = malloc(sizeof(ast_t));
   final->type = AST_BINARY;
 
   ast_t *fcursor = final;
@@ -506,7 +510,35 @@ ast_t *NPI(ast_list_t* expr, int len) {
     fcursor->binary.left = left;
     fcursor = fcursor->binary.left;
   }
-  return final;
+  return final;*/
+  int x = 0;
+  ast_binary_e e;
+  return ast_from_stack(out, ast_new_binary(e, NULL, NULL), &x);
+}
+
+ast_t *ast_from_stack(ast_t *stack[], ast_t *tree, int *i) {
+  if (stack[*i]->type == AST_VARIABLE || 
+  stack[*i]->type == AST_INTEGER || 
+  (stack[*i]->type == AST_UNARY && strcmp(stack[*i]->unary.op, "(") == 0)) {
+    return stack[*i];
+  }
+
+  if (stack[*i]->type == AST_BINARY) {
+    if (*i == 0)
+      tree->type = AST_BINARY;
+    tree = stack[*i];
+    if (tree->binary.right == NULL) {
+      (*i)++;
+      tree->binary.right = ast_from_stack(stack, tree->binary.right, i);
+    }
+
+    if (tree->binary.left == NULL) {
+      (*i)++;
+
+      tree->binary.left = ast_from_stack(stack, tree->binary.left, i);
+    }
+  }
+  return tree;
 }
 
 bool is_higher_precedence(ast_t *a, ast_t *b) {
@@ -517,38 +549,34 @@ bool is_higher_precedence(ast_t *a, ast_t *b) {
   } else if (a->type == AST_INTEGER || a->type == AST_VARIABLE) {
         left= "VAR";
 
+  } else if (a->type == AST_UNARY && strcmp(a->unary.op, "(") == 0) {
+        left= "(";
   }
-  
+
   if (b->type == AST_BINARY) {
     right = b->binary.op.op;  
   } else if (b->type == AST_INTEGER || b->type == AST_VARIABLE){
     right = "VAR";
   } 
-  int left_rank = 8;
-  int right_rank = 8;
+  else if (b->type == AST_UNARY && strcmp(b->unary.op, "(") == 0) {
+        right = "(";
+  }
+  int left_rank = TABLE_LEVELS;
+  int right_rank = TABLE_LEVELS;
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < TABLE_LEVELS; i++) {
     for (int j = 0; j < 4; j++) {
       if (table[i][j] == NULL) {
         break;
       }
       if (strcmp(table[i][j], left) == 0) {
-        left_rank = 8 - i;
+        left_rank = TABLE_LEVELS - i;
       }
       if (strcmp(table[i][j],right) == 0) {
-        right_rank = 8 - i;
+        right_rank = TABLE_LEVELS - i;
       }
     }
   }
-  
-  /*if (a->type == AST_BINARY && (b->type == AST_VARIABLE || b->type == AST_INTEGER)) {
-    return true;
-  } else if (b->type == AST_BINARY && (a->type == AST_VARIABLE || a->type == AST_INTEGER)) {
-    return false;
-  }
-  if (a->type == AST_BINARY && b->type == AST_BINARY) {
-    
-  }*/
-  
+
   return left_rank > right_rank;
 }
