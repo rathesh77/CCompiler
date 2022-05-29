@@ -142,7 +142,7 @@ void parse_function(buffer_t *buffer, ast_t **function) {
     buf_lock(buffer);
     buf_rollback_and_unlock(buffer, 1);
     lexem = lexer_getalphanum(buffer);
-    ast_t *st = malloc(sizeof(ast_t));
+    ast_t *st = NULL;
     if (strcmp(lexem, IF) == 0) {
       char left_parenthesis = buf_getchar_after_blank(buffer);
       if (left_parenthesis != '(') {
@@ -252,7 +252,7 @@ void parse_function(buffer_t *buffer, ast_t **function) {
         break;
       }
       parse_function(buffer, &(previous->branch.invalid));
-    } else {
+    }  else {
       int count = buffer->it;
       int temp = count;
       int found = 0;
@@ -273,31 +273,39 @@ void parse_function(buffer_t *buffer, ast_t **function) {
       }
       buf_lock(buffer);
       buf_rollback_and_unlock(buffer, count - temp);
-      char next_char = buf_getchar_after_blank(buffer);
-      if (next_char == '(') {
-        st = parse_fncall(buffer, lexem);
-        if (buf_getchar_after_blank(buffer) != ';') {
-          printf("point virgule manquant\n");
-          break;
-        }
-
-      } else if (next_char == '=') {
+      if (buf_getchar_after_blank(buffer) == '=') {
         if (!is_letter(lexem[0])) {
           printf("LHS must be a variable of this scope\n");
           break;
         }
         st = parse_assignment(buffer, lexem);
+      } else if (strcmp(lexem, INTEGER) == 0) {
+        buf_lock(buffer);
+        buf_rollback_and_unlock(buffer, 1);
+        char *var_name = lexer_getalphanum(buffer);
+        if (!is_letter(var_name[0]) || strlen(var_name) == 0) {
+          printf("LHS must be a variable of this scope\n");
+          break;
+        }
+        st = parse_declaration(buffer, var_name);
       } else {
-        printf("error");
+        buf_lock(buffer);
+        buf_rollback_and_unlock(buffer, 1);
+        if (buf_getchar_after_blank(buffer) == '(') {
+          st = parse_fncall(buffer, lexem);
+          if (buf_getchar_after_blank(buffer) != ';') {
+            printf("point virgule manquant\n");
+            break;
+          }
+        }
+      }
+      if (st == NULL) {
         break;
       }
-        cursor->node = st;
-        previous = st;
-        cursor->next = malloc(sizeof(ast_list_t));
-        cursor = cursor->next;
-    }
-    if (st == NULL) {
-      break;
+      cursor->node = st;
+      previous = st;
+      cursor->next = malloc(sizeof(ast_list_t));
+      cursor = cursor->next;
     }
   }
   printf("Une ou plusieurs erreurs de syntaxe rencontrées\n");
@@ -311,8 +319,10 @@ void parse_function(buffer_t *buffer, ast_t **function) {
 ast_t * parse_assignment(buffer_t *buffer, char * var_name) {
 
   ast_t *right = parse_expr(buffer);
-  if (right == NULL)
+  if (right == NULL  || right->type == AST_NULL) {
+    printf("error lors du parsing de declaration\n");
     return NULL;
+  }
   char semi_colon = buf_getchar_after_blank(buffer);
   if (semi_colon == ';') 
     return ast_new_assignment(ast_new_variable(var_name, 0), right);
@@ -322,6 +332,25 @@ ast_t * parse_assignment(buffer_t *buffer, char * var_name) {
   
 }
 
+ast_t * parse_declaration(buffer_t *buffer, char * var_name) {
+
+  if (buf_getchar_after_blank(buffer) != '=') {
+    return ast_new_declaration(ast_new_variable(var_name, 0), NULL);
+  }
+  ast_t *right = parse_expr(buffer);
+  if (right == NULL || right->type == AST_NULL) {
+    printf("error lors du parsing de declaration\n");
+    return NULL;      
+  }
+
+  char semi_colon = buf_getchar_after_blank(buffer);
+  if (semi_colon == ';') 
+    return ast_new_declaration(ast_new_variable(var_name, 0), right);
+  
+  printf("error lors du parsing d\'assignement\n");
+  return NULL;
+  
+}
 ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
   ast_t *fn_call = malloc(sizeof(ast_t));
   ast_list_t *args = malloc(sizeof(ast_list_t));
@@ -535,28 +564,6 @@ ast_t *NPI(ast_list_t* expr, int len) {
     out[cpt--] = stack[i--];
   }
   cpt++;
-  /*ast_t *final = malloc(sizeof(ast_t));
-  final->type = AST_BINARY;
-
-  ast_t *fcursor = final;
-  fcursor->binary.op = out[cpt++]->binary.op;
-
-  while (cpt < len) {
-    ast_t *right = NULL;
-    ast_t *left = NULL;    
-    
-    right = out[cpt++];
-    fcursor->binary.right = right;
-
-    if (cpt == len) {
-      return final;
-    }
-
-    left = out[cpt++];
-    fcursor->binary.left = left;
-    fcursor = fcursor->binary.left;
-  }
-  return final;*/
   int x = 0;
   ast_binary_e e;
   return ast_from_stack(out, ast_new_binary(e, NULL, NULL), &x);
