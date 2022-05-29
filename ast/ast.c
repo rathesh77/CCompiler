@@ -93,6 +93,7 @@ ast_t *ast_new_loop(ast_t *condition, ast_list_t *stmts)
 ast_t *ast_new_return(ast_t *expr)
 {
   ast_t *ast = malloc(sizeof(ast_t));
+  ast->type = AST_RETURN;
   ast->ret.expr = expr;
 
   return ast;

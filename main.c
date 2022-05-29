@@ -4,6 +4,7 @@
 #include "lexer/lexer.h"
 #include "parser/parser.h"
 #include "semantic/semantic.h"
+#include "generator/generator.h"
 
 
 int main() {
@@ -14,8 +15,11 @@ int main() {
 
   ast_list_t *ast= parse_code(&buffer);
   if (ast != NULL) {
-    if (iterate_functions(ast) == true) {
-      return 0;
+    if (has_valid_semantic(ast) == true) {
+      printf("analyse semantique valide.\n");
+      generate_code(ast);
+    } else {
+      printf("analyse semantique invalide...\n");
     }
   }
   printf("end\n");

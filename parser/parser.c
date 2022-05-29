@@ -5,7 +5,7 @@
 #include "../utils/utils.h"
 #include "../dictionnary/dictionnary.h"
 #include "parser.h"
-#include "../precedence_table.h"
+#include "precedence_table.h"
 
 ast_list_t *parse_code(buffer_t *buffer)
 {
@@ -143,7 +143,18 @@ void parse_function(buffer_t *buffer, ast_t **function) {
     buf_rollback_and_unlock(buffer, 1);
     lexem = lexer_getalphanum(buffer);
     ast_t *st = NULL;
-    if (strcmp(lexem, IF) == 0) {
+    if (strcmp(lexem, RETURN) == 0) {
+      st = parse_expr(buffer);
+      if (buf_getchar_after_blank(buffer) != ';') {
+        printf("point virgule manquante\n");
+        break;
+      }
+      st = ast_new_return(st);
+      cursor->node = st;
+      previous = st;
+      cursor->next = malloc(sizeof(ast_list_t));
+      cursor = cursor->next;      
+    } else if (strcmp(lexem, IF) == 0) {
       char left_parenthesis = buf_getchar_after_blank(buffer);
       if (left_parenthesis != '(') {
         printf("error lors du parsing de condition\n");

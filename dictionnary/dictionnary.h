@@ -20,3 +20,5 @@
 #define MINUS '-'
 #define DIVISION '/'
 #define MULT '*'
+
+#define RETURN "retourner"
