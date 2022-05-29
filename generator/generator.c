@@ -22,7 +22,7 @@ bool generate_code(ast_list_t* tree) {
             fputs(func_name, file);
             fputs("(",file);
 
-            while (true) {
+            while (cursor_params->node->type != AST_NULL) {
                 char *param_name = cursor_params->node->var.name;
                 fputs(param_name, file);
                 if (cursor_params->next->node->type == AST_NULL) {

@@ -43,8 +43,8 @@ ast_list_t *parse_code(buffer_t *buffer)
       }
       while (true)
       {
-        char *param_name = lexer_getalphanum(buffer);
-        if (strlen(param_name) == 0) {
+        char *param_type = lexer_getalphanum(buffer);
+        if (strlen(param_type) == 0) {
           if (has_more_params == true) {
             printf("error\n");
             return NULL;
@@ -87,11 +87,15 @@ ast_list_t *parse_code(buffer_t *buffer)
           }
         
         }
-        if (buf_getchar_after_blank(buffer) != ':') {
-          printf("error\n");
+        if (strcmp(param_type, "entier") != 0) {
+          printf("parametre de fonction manquant\n");
           return NULL;
         }
-        char *param_type = lexer_getalphanum(buffer);
+        char *param_name = lexer_getalphanum(buffer);
+        if (strlen(param_name) == 0) {
+          printf("parametre de fonction manquant\n");
+          return NULL;
+        }
         ptr_params->node = ast_new_variable(param_name, 0);
         ptr_params->next = malloc(sizeof(ast_list_t));
         ptr_params = ptr_params->next;   
