@@ -2,6 +2,7 @@
 
 typedef enum
 {
+  AST_NULL,
   AST_VOID,
   AST_INTEGER,
   AST_BINARY,
@@ -41,7 +42,7 @@ typedef struct ast_t
     } binary;
     struct
     {
-      char op;
+      char *op;
       struct ast_t *operand;
     } unary;
     struct

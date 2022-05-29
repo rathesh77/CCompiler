@@ -18,7 +18,7 @@ int main() {
 
 
 
-  ast_t *arbre_final = parse_code(&buffer);
+  ast_list_t *arbre_final = parse_code(&buffer);
   printf("end\n");
   return 0;
 }

@@ -39,7 +39,7 @@ char *lexer_getalphanum(buffer_t *buffer) {
     return "\0";
   }
 
-  char *out = malloc(size);
+  char *out = malloc(size + 1);
   char *first_ptr = out;
 
   buf_rollback(buffer, size + offset);
