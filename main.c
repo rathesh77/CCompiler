@@ -3,22 +3,21 @@
 #include "buffer/buffer.h"
 #include "lexer/lexer.h"
 #include "parser/parser.h"
-#define MAX_BUFFER_SIZE = 1024
+#include "semantic/semantic.h"
+
 
 int main() {
   buffer_t buffer;
   FILE *fd = fopen("sample.txt", "r");
   buf_init(&buffer, fd);
-  /*
-  char *out = lexer_getalphanum(&buffer);
-  printf("%s\n", out);
-
-  long li = lexer_getnumber(&buffer);
-  printf("%li", li);*/
 
 
-
-  ast_list_t *arbre_final = parse_code(&buffer);
+  ast_list_t *ast= parse_code(&buffer);
+  if (ast != NULL) {
+    if (iterate_functions(ast) == false) {
+      return 0;
+    }
+  }
   printf("end\n");
   return 0;
 }
