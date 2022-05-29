@@ -1,47 +1,105 @@
 #include "./semantic.h"
+#include <string.h>
+
+bool has_valid_semantic(ast_list_t *tree) {
+    return iterate_functions(tree);
+}
+
+ast_symbols* create_symbols_table() {
+
+    ast_symbols *symbols = malloc(sizeof(ast_symbols));
+    symbols->functions = malloc(sizeof(ast_list_t));    
+    symbols->variables = malloc(sizeof(ast_list_t));
+
+    symbols->functions->node = malloc(sizeof(ast_t));
+    symbols->variables->node = malloc(sizeof(ast_t));
+
+    symbols->functions->node->type = AST_NULL;
+    symbols->variables->node->type = AST_NULL;
+    return symbols;
+}
 
 bool iterate_functions(ast_list_t *tree) {
     ast_list_t *cursor = tree;
-    ast_symbols *symbols = malloc(sizeof(ast_symbols));
+    ast_symbols *symbols = create_symbols_table();
     ast_list_t *cursor_function = symbols->functions;
-
+    symbols->functions->node = cursor->node;
     while (cursor->node->type != AST_NULL) {
         if (analyze_function(cursor->node, symbols) == false) {
             return false;
         }
         cursor_function->node = cursor->node;
+        cursor_function->next = malloc(sizeof(ast_list_t));
+        cursor_function->next->node = malloc(sizeof(ast_t));
+        cursor_function->next->node->type = AST_NULL;     
         cursor_function = cursor_function->next;
+
         cursor = cursor->next;
 
     }
     return true;
 }
+
 bool analyze_function(ast_t *tree, ast_symbols* symbols) {
     ast_list_t *cursor_stmt = tree->function.stmts;
     ast_list_t *cursor_variable = symbols->variables;
 
     while (cursor_stmt->node->type != AST_NULL) {
         ast_t *statement = cursor_stmt->node;
+        bool is_valid_statement = false;
         if (statement->type == AST_ASSIGNMENT) {
-            bool is_valid_statement = analyze_statement(statement);
-            if (!is_valid_statement) {
-                return false;
-            }
+            is_valid_statement = analyze_assignment(statement, symbols);
+        } else if(statement->type == AST_DECLARATION) {
+            is_valid_statement = analyze_declaration(statement, symbols);
         } else if(statement->type == AST_FNCALL) {
-            bool is_valid_fn_call = analyze_fncall(statement);
-            if (!is_valid_fn_call) {
-                return false;
-            }
+            is_valid_statement = analyze_fncall(statement, symbols);
+        } else if (statement->type == AST_CONDITION || statement->type == AST_LOOP) {
+            is_valid_statement = analyze_function(statement, symbols);
+        }
+        if (is_valid_statement == false) {
+            return false;
         }
         cursor_stmt = cursor_stmt->next;
     }
-}
-
-bool analyze_statement(ast_t *stmt) {
     return true;
-    //return stmt->assignment.lvalue->type == AST_INTEGER && stmt->assignment.rvalue->type == AST_INTEGER;
 }
 
-bool analyze_fncall(ast_t *fncall) {
+bool analyze_fncall(ast_t *fncall, ast_symbols* symbols) {
+    ast_list_t *cursor = symbols->functions;
+    while (cursor->node->type != AST_NULL) {
+       if (strcmp(cursor->node->function.name, fncall->function.name) == 0) {
+            return true;
+        }
+        cursor->next = malloc(sizeof(ast_list_t));
+        cursor->next->node = malloc(sizeof(ast_t));
+        cursor->next->node->type = AST_NULL;
+        cursor = cursor->next;
+    }
     return false;
+}
+
+bool analyze_assignment(ast_t * assignment, ast_symbols* symbols) {
+    ast_list_t *cursor = symbols->variables;
+    while (cursor->node->type != AST_NULL) {
+       if (strcmp(cursor->node->declaration.lvalue->var.name, assignment->assignment.lvalue->var.name) == 0 && cursor->node->declaration.lvalue->var.type == assignment->assignment.lvalue->var.type) {
+            return true;
+        }
+        cursor = cursor->next;
+    }
+    return false;
+}
+
+bool analyze_declaration(ast_t * declaration, ast_symbols* symbols) {
+    ast_list_t *cursor = symbols->variables;
+    while (cursor->node->type != AST_NULL) {
+       if (strcmp(cursor->node->var.name, declaration->var.name) == 0 && cursor->node->var.type == declaration->var.type) {
+            return false;
+        }
+        cursor = cursor->next;
+    }
+    cursor->node = declaration;
+    cursor->next = malloc(sizeof(ast_list_t));
+    cursor->next->node = malloc(sizeof(ast_t));
+    cursor->next->node->type = AST_NULL;
+    return true;
 }

@@ -14,7 +14,7 @@ int main() {
 
   ast_list_t *ast= parse_code(&buffer);
   if (ast != NULL) {
-    if (iterate_functions(ast) == false) {
+    if (iterate_functions(ast) == true) {
       return 0;
     }
   }
