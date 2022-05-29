@@ -133,6 +133,9 @@ void parse_function(buffer_t *buffer, ast_t **function) {
   while (!buf_eof(buffer)) {
     char end_bracket = buf_getchar_after_blank(buffer);
     if (end_bracket == '}') {
+      cursor->node = ast_new_return(NULL);
+      cursor->node->type = AST_NULL;
+
       printf("parsing de fonction terminé\n");
       return;
     }
@@ -342,6 +345,8 @@ ast_t * parse_fncall(buffer_t *buffer, char *fn_name) {
       break;
     }
   }
+  cursor->node = ast_new_return(NULL);
+  cursor->node->type = AST_NULL;
   fn_call = ast_new_fncall(fn_name, head);
   return fn_call;
 }
@@ -480,6 +485,11 @@ ast_t *parse_expr(buffer_t *buffer) {
     cursor = cursor->next;
     len++;
 
+  }
+  if (len == 0) {
+    ast_t *args = malloc(sizeof(ast_t));
+    args->type = AST_NULL;
+    return args;
   }
   if (len % 2 == 0) {
     printf("nombre insuffisant de membre dans l\'expression\n");

@@ -2,6 +2,7 @@
 
 typedef enum
 {
+  AST_NULL,
   AST_VOID,
   AST_INTEGER,
   AST_BINARY,
