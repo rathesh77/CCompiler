@@ -35,7 +35,7 @@ ast_list_t *parse_code(buffer_t *buffer)
       ast_list_t *params = malloc(sizeof(ast_list_t));
       ast_list_t *stmts = malloc(sizeof(ast_list_t));
       ast_list_t *ptr_params = params;
-
+      bool has_more_params = false;
       if (left_parenthesis != '(')
       {
         printf("error");
@@ -44,49 +44,65 @@ ast_list_t *parse_code(buffer_t *buffer)
       while (true)
       {
         char *param_name = lexer_getalphanum(buffer);
-        buf_skipblank(buffer);
-        if (buf_getchar(buffer) != ':')
-        {
-          printf("error");
+        if (strlen(param_name) == 0) {
+          if (has_more_params == true) {
+            printf("error\n");
+            return NULL;
+          }
+        char next_char = buf_getchar_after_blank(buffer);
+          if (next_char == ')')
+          {
+            if (buf_getchar_after_blank(buffer) != ':') {
+              printf("Type de retour requis\n");
+              return NULL;
+            }
+            char *ret = lexer_getalphanum(buffer);
+            if (strcmp(ret, INTEGER) != 0 && strcmp(ret, VOID) != 0) {
+              printf("Type de retour inconnu\n");
+              return NULL;
+            }
+            if (buf_getchar_after_blank(buffer) != '{') {
+              printf("Accolade ouvrante requis\n");
+              return NULL;
+            }
+            printf("declaration fonction parsé\n");
+            ptr_params->node = ast_new_return(NULL);
+
+            ptr_params->node->type = AST_NULL;
+            ast_t *function = ast_new_function(func_name, strcmp(ret, INTEGER) == 0 ? 0 : -1, params, stmts);
+            parse_function(buffer, &function);
+            if (function == NULL) {
+              free(functions);
+              functions = NULL;
+              return NULL;
+            }
+            
+            cursor->node = function;
+            cursor->next = malloc(sizeof(ast_t));
+            cursor = cursor->next;
+            break;
+          } else {
+                      printf("error\n");
+          return NULL;
+          }
+        
+        }
+        if (buf_getchar_after_blank(buffer) != ':') {
+          printf("error\n");
           return NULL;
         }
         char *param_type = lexer_getalphanum(buffer);
         ptr_params->node = ast_new_variable(param_name, 0);
         ptr_params->next = malloc(sizeof(ast_list_t));
-        ptr_params = ptr_params->next;
-        char next_sym = buf_getchar_after_blank(buffer);
-        if (next_sym == ')')
+        ptr_params = ptr_params->next;   
+        if (buf_getchar_after_blank(buffer) == ',')
         {
-          if (buf_getchar_after_blank(buffer) != ':') {
-            printf("Type de retour requis\n");
-            return NULL;
-          }
-          char *ret = lexer_getalphanum(buffer);
-          if (strcmp(ret, INTEGER) != 0 && strcmp(ret, VOID) != 0) {
-            printf("Type de retour inconnu\n");
-            return NULL;
-          }
-          if (buf_getchar_after_blank(buffer) != '{') {
-            printf("Accolade ouvrante requis\n");
-            return NULL;
-          }
-          printf("declaration fonction parsé\n");
-          ast_t *function = ast_new_function(func_name, strcmp(ret, INTEGER) == 0 ? 0 : -1, params, stmts);
-          parse_function(buffer, &function);
-          if (function == NULL) {
-            free(functions);
-            functions = NULL;
-            return NULL;
-          }
-          cursor->node = function;
-          cursor->next = malloc(sizeof(ast_t));
-          cursor = cursor->next;
-          break;
-        }
-        else if (next_sym != ',')
-        {
-          printf("error");
-          return NULL;
+          has_more_params = true;
+        } else {
+                    has_more_params = false;
+
+          buf_lock(buffer);
+          buf_rollback_and_unlock(buffer, 1);
         }
       }
     }
@@ -95,6 +111,9 @@ ast_list_t *parse_code(buffer_t *buffer)
       break;
     }
   }
+  cursor->node = ast_new_return(NULL);
+  cursor->node->type = AST_NULL;
+
   return functions;
 }
 
