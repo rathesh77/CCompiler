@@ -149,6 +149,10 @@ void parse_function(buffer_t *buffer, ast_t **function) {
     ast_t *st = NULL;
     if (strcmp(lexem, RETURN) == 0) {
       st = parse_expr(buffer);
+      if (st == NULL) {
+        printf("error return statement\n");
+        break;
+      }
       if (buf_getchar_after_blank(buffer) != ';') {
         printf("point virgule manquante\n");
         break;
@@ -166,7 +170,7 @@ void parse_function(buffer_t *buffer, ast_t **function) {
       }      
       st = parse_expr(buffer);
       if (st == NULL) {
-          
+          printf("error lors du parsing de condition\n");
           break;
       }
       if (buf_getchar_after_blank(buffer) == ')') {
@@ -194,6 +198,10 @@ void parse_function(buffer_t *buffer, ast_t **function) {
 
       
       parse_function(buffer, &valid_branch);
+      if (valid_branch == NULL) {
+        printf("error lors du parsing de condition\n");
+        break;
+      }
       st = ast_new_condition(st, valid_branch, invalid_branch);
 
       cursor->node = st;
@@ -208,6 +216,10 @@ void parse_function(buffer_t *buffer, ast_t **function) {
           break;
       }
       st = parse_expr(buffer);
+      if (st == NULL) {
+        printf("erreur lors du parsing d\'une boucle tantque\n");
+        break;
+      }
       ast_t *loop = ast_new_loop(st, malloc(sizeof(ast_list_t)));
         if (buf_getchar_after_blank(buffer) == ')') {
         if (buf_getchar_after_blank(buffer) != '{') {
@@ -219,6 +231,10 @@ void parse_function(buffer_t *buffer, ast_t **function) {
           break;
       }
       parse_function(buffer, &loop);
+      if (loop == NULL) {
+        printf("error lors du parsing de loop\n");
+        break;
+      }
       cursor->node = loop;
       previous = loop;
       cursor->next = malloc(sizeof(ast_list_t));
@@ -273,6 +289,10 @@ void parse_function(buffer_t *buffer, ast_t **function) {
         break;
       }
       parse_function(buffer, &(previous->branch.invalid));
+      if (previous->branch.invalid == NULL) {
+        printf("error lors du parsing de condition else/elseif\n");
+        break;
+      }
     }  else {
       int count = buffer->it;
       int temp = count;
@@ -300,6 +320,10 @@ void parse_function(buffer_t *buffer, ast_t **function) {
           break;
         }
         st = parse_assignment(buffer, lexem);
+        if (st == NULL) {
+          printf("error dans une assignation\n");
+          break;
+        }
       } else if (strcmp(lexem, INTEGER) == 0) {
         buf_lock(buffer);
         buf_rollback_and_unlock(buffer, 1);
@@ -309,11 +333,19 @@ void parse_function(buffer_t *buffer, ast_t **function) {
           break;
         }
         st = parse_declaration(buffer, var_name);
+        if (st == NULL) {
+          printf("error dans une declaration\n");
+          break;
+        }        
       } else {
         buf_lock(buffer);
         buf_rollback_and_unlock(buffer, 1);
         if (buf_getchar_after_blank(buffer) == '(') {
           st = parse_fncall(buffer, lexem);
+          if (st == NULL) {
+            printf("error dans un appel un fonction\n");
+            break;
+          }          
           if (buf_getchar_after_blank(buffer) != ';') {
             printf("point virgule manquant\n");
             break;
@@ -457,6 +489,10 @@ ast_t *parse_expr(buffer_t *buffer) {
       break;
     }
     else if (is_arithmetic_operator(next_char)) {  // si on tombe sur +, - ,/ ou *
+      if (len % 2 == 0) {
+            printf("error lors du parsing d\'une expression\n");
+            return NULL;
+      }
       ast_binary_e operator = {};
       operator.op = malloc(sizeof(char) * 2);
       operator.op[0] = next_char;
@@ -524,6 +560,10 @@ ast_t *parse_expr(buffer_t *buffer) {
         cursor = cursor->next;
         len++;
         continue;
+    }
+    if (len % 2 != 0 && !is_logic_operator(lexem)) {
+                printf("error\n");
+          return NULL;
     }
     buf_lock(buffer);
     buf_rollback_and_unlock(buffer, strlen(lexem));
