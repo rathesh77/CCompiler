@@ -5,7 +5,7 @@
 #include "../utils/utils.h"
 #include "../dictionnary/dictionnary.h"
 #include "parser.h"
-#include "precedence_table.h"
+#include "../operators_precedence/operators_table.h"
 
 ast_list_t *parse_code(buffer_t *buffer)
 {

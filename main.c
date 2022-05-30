@@ -16,16 +16,20 @@ int main(int argc, char *argv[]) {
   }
   char *filename = argv[1];
   int len = strlen(filename);
+  char *file_without_extension = malloc(sizeof(char) * len);
+
   int cpt = 0;
   char *extension = malloc(sizeof(char) * len);
   while (cpt < len && filename[cpt] != '.') {
+    file_without_extension[cpt] = filename[cpt];
     cpt++;
   }
-  cpt++;
-  if (cpt == len - 1) {
+  file_without_extension[cpt] = '\0';
+  if (cpt == len) {
     printf("format de fichier invalide");
     return -1;
   }
+  cpt++;
   int i = 0;
   while (cpt < len) {
     extension[i] = filename[cpt];
@@ -51,9 +55,18 @@ int main(int argc, char *argv[]) {
   if (ast != NULL) {
     if (has_valid_semantic(ast) == true) {
       printf("analyse semantique valide.\n");
-      generate_code(ast);
-      printf("code généré.\n");
-
+      FILE * output;
+      char *output_filename = malloc(sizeof(char) * (strlen(file_without_extension) + strlen(EXTENSION) + 1));      
+      strcpy(output_filename, file_without_extension);
+      strcat(output_filename, ".js");
+      output = fopen(output_filename, "w");
+      if(output == NULL) {
+          printf("Impossible de créer le fichier\n");
+          return -1;
+      }  
+      if (generate_code(ast, output) != true) {
+        printf("code généré.\n");
+      }
     } else {
       printf("analyse semantique invalide...\n");
     }

@@ -1,14 +1,7 @@
 #include "generator.h"
 #include <string.h>
 
-bool generate_code(ast_list_t* tree) {
-    FILE * file;
-    file = fopen("output/sample.js", "w");
-    if(file == NULL)
-    {
-        printf("Unable to create file.\n");
-        return false;
-    }    
+bool generate_code(ast_list_t* tree, FILE *file) {
     ast_list_t *cursor = tree;
 
     while (cursor->node->type != AST_NULL) {
@@ -40,7 +33,7 @@ bool generate_code(ast_list_t* tree) {
 
         cursor = cursor->next;
     }
-        fputs("\n}", file);
+        fputs("}", file);
         fclose(file);
         return true;
 }
@@ -100,6 +93,7 @@ bool generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
             fputs(") {\n", file);
 
             generate_stmts(ast->loop.stmts, file, indent_level+1);
+            indent(file, indent_level);
             fputs("}\n", file);
         } else if (ast->type == AST_FNCALL) {
             char *func_name = ast->call.name;
