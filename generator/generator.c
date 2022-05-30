@@ -1,7 +1,7 @@
 #include "generator.h"
 #include <string.h>
 
-bool generate_code(ast_list_t* tree, FILE *file) {
+void generate_code(ast_list_t* tree, FILE *file) {
     ast_list_t *cursor = tree;
 
     while (cursor->node->type != AST_NULL) {
@@ -33,12 +33,11 @@ bool generate_code(ast_list_t* tree, FILE *file) {
 
         cursor = cursor->next;
     }
-        fputs("}", file);
-        fclose(file);
-        return true;
+    fputs("}", file);
+    fclose(file);
 }
 
-bool generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
+void generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
     ast_list_t *cursor = stmts;
 
     while (cursor->node->type != AST_NULL) {
