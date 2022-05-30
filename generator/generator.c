@@ -82,8 +82,6 @@ bool generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
 
                 indent(file, indent_level);
                 fputs("}\n", file);
-                //fseek(file, -bytes, SEEK_CUR);
-
 
                 cursor_branch = cursor_branch->branch.invalid;
             }
@@ -93,16 +91,13 @@ bool generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
                 generate_stmts(cursor_branch->compound_stmt.stmts, file, indent_level+1);
                 indent(file, indent_level);
                 fputs("}\n", file);
-            }
-            //fputs(build_expr(cursor_branch->branch.valid->compound_stmt.stmts), file);
-        
+            }        
 
         } else if (ast->type == AST_LOOP) {
             fputs("while (", file);
             char *loop = build_expr(ast->loop.condition);
             fputs(loop, file);
             fputs(") {\n", file);
-            indent(file, indent_level);
 
             generate_stmts(ast->loop.stmts, file, indent_level+1);
             fputs("}\n", file);
