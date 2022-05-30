@@ -188,7 +188,10 @@ void parse_function(buffer_t *buffer, ast_t **function) {
       
       invalid_branch->type = AST_COMPOUND_STATEMENT;
       invalid_branch->compound_stmt.stmts = malloc(sizeof(ast_list_t));
-  
+      invalid_branch->compound_stmt.stmts->node = malloc(sizeof(ast_t));      
+
+      invalid_branch->compound_stmt.stmts->node->type = AST_NULL;
+
       
       parse_function(buffer, &valid_branch);
       st = ast_new_condition(st, valid_branch, invalid_branch);
@@ -252,6 +255,9 @@ void parse_function(buffer_t *buffer, ast_t **function) {
       
       invalid_branch->type = AST_COMPOUND_STATEMENT;
       invalid_branch->compound_stmt.stmts = malloc(sizeof(ast_list_t));
+      invalid_branch->compound_stmt.stmts->node = malloc(sizeof(ast_t));      
+      invalid_branch->compound_stmt.stmts->node->type = AST_NULL;
+
       parse_function(buffer, &valid_branch);
         
       st = ast_new_condition(st, valid_branch, invalid_branch);

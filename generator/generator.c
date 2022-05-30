@@ -50,9 +50,7 @@ bool generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
 
     while (cursor->node->type != AST_NULL) {
         ast_t *ast = cursor->node; 
-        for (int i = 0; i < indent_level; i++) {
-            fputs("\t", file);
-        }
+        indent(file, indent_level);
         if (ast->type == AST_DECLARATION) {
             char *var_name = ast->declaration.lvalue->var.name;
             char *value = build_expr(ast->declaration.rvalue);
@@ -64,28 +62,72 @@ bool generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
 
         } else if (ast->type == AST_CONDITION) {
             fputs("if (", file);
-            char *condition = build_expr(ast->branch.condition);
-            fputs(condition, file);
+            fputs(build_expr(ast->branch.condition), file);            
             fputs(") {\n", file);
-            for (int i = 0; i < indent_level; i++) {
-                fputs("\t", file);
-            }            
+                generate_stmts(ast->branch.valid->compound_stmt.stmts, file, indent_level+1);
+
+            indent(file, indent_level);
+    
             fputs("}\n", file);
+            ast_t *cursor_branch = ast->branch.invalid;
+  
+            while (cursor_branch->type == AST_CONDITION) {
+                indent(file, indent_level);
+                      
+                fputs("else if (", file);
+                fputs(build_expr(cursor_branch->branch.condition), file);
+                fputs(") {\n", file);
+
+                generate_stmts(cursor_branch->branch.valid->compound_stmt.stmts, file, indent_level+1);
+
+                indent(file, indent_level);
+                fputs("}\n", file);
+                //fseek(file, -bytes, SEEK_CUR);
+
+
+                cursor_branch = cursor_branch->branch.invalid;
+            }
+            if (cursor_branch->type == AST_COMPOUND_STATEMENT && cursor_branch->compound_stmt.stmts->node->type != AST_NULL) {
+                indent(file, indent_level);
+                fputs("else {\n", file);
+                generate_stmts(cursor_branch->compound_stmt.stmts, file, indent_level+1);
+                indent(file, indent_level);
+                fputs("}\n", file);
+            }
+            //fputs(build_expr(cursor_branch->branch.valid->compound_stmt.stmts), file);
+        
 
         } else if (ast->type == AST_LOOP) {
             fputs("while (", file);
             char *loop = build_expr(ast->loop.condition);
             fputs(loop, file);
             fputs(") {\n", file);
-            for (int i = 0; i < indent_level; i++) {
-                fputs("\t", file);
-            }
+            indent(file, indent_level);
+
             generate_stmts(ast->loop.stmts, file, indent_level+1);
             fputs("}\n", file);
+        } else if (ast->type == AST_FNCALL) {
+            char *func_name = ast->call.name;
+            fputs(func_name, file);
+            fputs("(", file);
+            ast_list_t *cursor_args = ast->call.args;
+
+            while (true) {
+                fputs(build_expr(cursor_args->node), file);
+                cursor_args = cursor_args->next;
+                if (cursor_args->node->type == AST_NULL) {
+                    break;
+                }
+                fputs(", ", file);
+
+            }
+            fputs(");\n", file);
+
         }
         cursor = cursor->next;
     }
 }
+
 char* convert_operator(char *op) {
     if (strcmp(op, "ET") == 0)
         return "&&";
@@ -93,7 +135,20 @@ char* convert_operator(char *op) {
         return "||"; 
     return op;
 }
+
 char* build_expr(ast_t* expr) {
+
+    if (expr->type == AST_FNCALL) {
+        char *str = build_expr(expr->call.args->node);
+
+        char *total = malloc(sizeof(char) * (strlen(str)) + (strlen(expr->call.name) + 2));
+        strcpy(total, expr->call.name);
+                strcat(total, "(");
+        strcat(total, str);
+                strcat(total, ")");
+
+        return total;
+    }
     if (expr->type == AST_VARIABLE) {
         return expr->var.name;
     }
@@ -103,18 +158,16 @@ char* build_expr(ast_t* expr) {
         return str;
     }    
     if (expr->type == AST_BINARY) {
-              char op[10];
+        char *op = malloc(sizeof(char) *10);
         strcpy( op, " " );
         strcat( op, convert_operator(expr->binary.op.op) );
         strcat( op, " " );
 
-        
         char *right_expr = build_expr(expr->binary.right);
         char *right = malloc(sizeof(char) * strlen(right_expr));
 
         char *left_expr = build_expr(expr->binary.left);
-
-        char *left = malloc(sizeof(char) * strlen(left_expr) + strlen(op));
+        char *left = malloc(sizeof(char) * (strlen(left_expr) + strlen(op)));
 
         strcpy(right, right_expr);
         strcpy(left,left_expr);
@@ -124,18 +177,20 @@ char* build_expr(ast_t* expr) {
         strcpy(total, left);
         strcat(total, right);
 
-        return total;}
+        return total;
+    }
     if (expr->type == AST_UNARY) {
         char *str = build_expr(expr->unary.operand);
-        char *cpy = malloc(sizeof(char) * 255);
+        char *cpy = malloc(sizeof(char) * (255) + strlen(str) + 2);
         strcpy( cpy, "(" );
         strcat( cpy,str );
         strcat( cpy, ")" );
-        return &(cpy[0]);
+        return cpy;
     }
 }
 
-char *concat_expr(char *a, char *b) {
-
-    return strcat(a,b);
+void indent(FILE *file,int indent_level) {
+    for (int i = 0; i < indent_level; i++) {
+        fputs("\t", file);
+    }
 }

@@ -18,6 +18,8 @@ int main() {
     if (has_valid_semantic(ast) == true) {
       printf("analyse semantique valide.\n");
       generate_code(ast);
+      printf("code généré.\n");
+
     } else {
       printf("analyse semantique invalide...\n");
     }
