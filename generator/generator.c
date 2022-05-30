@@ -112,12 +112,14 @@ char* build_expr(ast_t* expr) {
         char *right_expr = build_expr(expr->binary.right);
         char *right = malloc(sizeof(char) * strlen(right_expr));
 
-        char *left_expr = concat_expr(build_expr(expr->binary.left), op);
-        char *left = malloc(sizeof(char) * strlen(left_expr));
+        char *left_expr = build_expr(expr->binary.left);
+
+        char *left = malloc(sizeof(char) * strlen(left_expr) + strlen(op));
 
         strcpy(right, right_expr);
         strcpy(left,left_expr);
-        
+        strcat(left,op);
+
         char* total = malloc(sizeof(char) * (strlen(left) + strlen(right)));
         strcpy(total, left);
         strcat(total, right);
