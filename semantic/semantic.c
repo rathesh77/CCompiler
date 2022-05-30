@@ -41,7 +41,15 @@ bool iterate_functions(ast_list_t *tree) {
 }
 
 bool analyze_function(ast_t *tree, ast_symbols* symbols) {
-    ast_list_t *cursor_stmt = tree->function.stmts;
+    ast_list_t *cursor_stmt = NULL;
+    if (tree->type == AST_FUNCTION) {
+        cursor_stmt = tree->function.stmts;
+    } else if (tree->type == AST_CONDITION) {
+        cursor_stmt = tree->branch.valid->compound_stmt.stmts;
+    } else if(tree->type == AST_LOOP) {
+        cursor_stmt = tree->loop.stmts;
+
+    }
     ast_list_t *cursor_variable = symbols->variables;
 
     while (cursor_stmt->node->type != AST_NULL) {
