@@ -8,6 +8,7 @@ ast_list_t *parse_code(buffer_t *);
 ast_t *parse_condition(buffer_t *, ast_t *);
 ast_t *parse_loop(buffer_t *);
 ast_t *parse_assignment(buffer_t *, char*);
+ast_t *parse_declaration(buffer_t *, char*);
 ast_t *parse_fncall(buffer_t *, char *);
 ast_t *parse_arg(buffer_t *);
 ast_t *parse_expr(buffer_t *);
