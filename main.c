@@ -64,9 +64,9 @@ int main(int argc, char *argv[]) {
           printf("Impossible de créer le fichier\n");
           return -1;
       }  
-      if (generate_code(ast, output) != true) {
-        printf("code généré.\n");
-      }
+      generate_code(ast, output);
+      printf("code généré dans le fichier ./%s\n", output_filename);
+    
     } else {
       printf("analyse semantique invalide...\n");
     }
