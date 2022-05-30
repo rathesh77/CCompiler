@@ -52,6 +52,9 @@ int main(int argc, char *argv[]) {
   buf_init(&buffer, fd);
 
   ast_list_t *ast = parse_code(&buffer);
+  fclose(fd);
+  free(fd);
+
   if (ast != NULL) {
     if (has_valid_semantic(ast) == true) {
       printf("analyse semantique valide.\n");
@@ -62,15 +65,20 @@ int main(int argc, char *argv[]) {
       output = fopen(output_filename, "w");
       if(output == NULL) {
           printf("Impossible de créer le fichier\n");
-          return -1;
-      }  
-      generate_code(ast, output);
-      printf("code généré dans le fichier ./%s\n", output_filename);
-    
+      } else {
+        generate_code(ast, output);
+        fclose(output);
+        printf("code généré dans le fichier ./%s\n", output_filename);
+      }
+      free(output_filename);
+
     } else {
       printf("analyse semantique invalide...\n");
     }
   }
+
+  free(ast);
+
   printf("end\n");
   return 0;
 }

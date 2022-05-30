@@ -34,7 +34,6 @@ void generate_code(ast_list_t* tree, FILE *file) {
         cursor = cursor->next;
     }
     fputs("}", file);
-    fclose(file);
 }
 
 void generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
