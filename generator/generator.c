@@ -1,4 +1,5 @@
 #include "generator.h"
+#include <string.h>
 
 bool generate_code(ast_list_t* tree) {
     FILE * file;
@@ -34,7 +35,7 @@ bool generate_code(ast_list_t* tree) {
             fputs(")", file);
             fputs( "{", file);
             fputs("\n", file);
-            generate_stmts(ast, file);
+            generate_stmts(ast->function.stmts, file, 1);
         }
 
         cursor = cursor->next;
@@ -44,24 +45,95 @@ bool generate_code(ast_list_t* tree) {
         return true;
 }
 
-bool generate_stmts(ast_t* function, FILE *file) {
-    ast_list_t *cursor = function->function.stmts;
+bool generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
+    ast_list_t *cursor = stmts;
 
     while (cursor->node->type != AST_NULL) {
         ast_t *ast = cursor->node; 
+        for (int i = 0; i < indent_level; i++) {
             fputs("\t", file);
-
+        }
         if (ast->type == AST_DECLARATION) {
-            char *var_name = ast->assignment.lvalue->var.name;
-            char *value = malloc(sizeof(char) * 10);
-            sprintf(value, "%d", ast->assignment.rvalue->integer);
+            char *var_name = ast->declaration.lvalue->var.name;
+            char *value = build_expr(ast->declaration.rvalue);
             fputs("let ", file);
             fputs(var_name, file);
             fputs(" = ", file);
             fputs(value, file);
-            fputs(";", file);
+            fputs(";\n", file);
 
+        } else if (ast->type == AST_CONDITION) {
+            fputs("if (", file);
+            char *condition = build_expr(ast->branch.condition);
+            fputs(condition, file);
+            fputs(") {\n", file);
+            for (int i = 0; i < indent_level; i++) {
+                fputs("\t", file);
+            }            
+            fputs("}\n", file);
+
+        } else if (ast->type == AST_LOOP) {
+            fputs("while (", file);
+            char *loop = build_expr(ast->loop.condition);
+            fputs(loop, file);
+            fputs(") {\n", file);
+            for (int i = 0; i < indent_level; i++) {
+                fputs("\t", file);
+            }
+            generate_stmts(ast->loop.stmts, file, indent_level+1);
+            fputs("}\n", file);
         }
         cursor = cursor->next;
     }
+}
+char* convert_operator(char *op) {
+    if (strcmp(op, "ET") == 0)
+        return "&&";
+    if (strcmp(op, "OU") == 0)
+        return "||"; 
+    return op;
+}
+char* build_expr(ast_t* expr) {
+    if (expr->type == AST_VARIABLE) {
+        return expr->var.name;
+    }
+    if (expr->type == AST_INTEGER) {
+        char *str = malloc(sizeof(char) * 11); 
+        sprintf(str, "%d", expr->integer);
+        return str;
+    }    
+    if (expr->type == AST_BINARY) {
+              char op[10];
+        strcpy( op, " " );
+        strcat( op, convert_operator(expr->binary.op.op) );
+        strcat( op, " " );
+
+        
+        char *right_expr = build_expr(expr->binary.right);
+        char *right = malloc(sizeof(char) * strlen(right_expr));
+
+        char *left_expr = concat_expr(build_expr(expr->binary.left), op);
+        char *left = malloc(sizeof(char) * strlen(left_expr));
+
+        strcpy(right, right_expr);
+        strcpy(left,left_expr);
+        
+        char* total = malloc(sizeof(char) * (strlen(left) + strlen(right)));
+        strcpy(total, left);
+        strcat(total, right);
+
+        return total;}
+    if (expr->type == AST_UNARY) {
+        char *str = build_expr(expr->unary.operand);
+        char *cpy = malloc(sizeof(char) * 255);
+        strcpy( cpy, "(" );
+        strcat( cpy,str );
+        strcat( cpy, ")" );
+        return &(cpy[0]);
+    }
+}
+
+char *concat_expr(char *a, char *b) {
+
+    return strcat(a,b);
 }
