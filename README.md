@@ -1,29 +1,19 @@
+# Compilateur langage ALGO vers Javascript
+
+## Fonctionnalités 
+
+- opérateur binaire (+, -, >=, >, <, <=, ==, !=, *, /, ET, OU)
+- appel de fonction
+- définition de fonction (fonction mafonction (entier a) : entier { } )
+- déclaration de variable / initialisation (entier a; entier b = 1;)
+- affectation (b = 2)
+- branchement (si / sinon si / sinon)
+- boucle (tantque () { })
+- retourner
+- variable
+- entier
+
+
 # Compiler et executer le projet
+
 ```make compile run```
-
-# Roadmap
-
-## types de statements:
--declaration de variables / affectation
--boucles
--conditions
--appel de functions
-
-## liste des mot-clés supportés par le langage cible
--tantque
--si
-
-## type de variables:
--entier
-
-
-stocker les variables
-stocker les appels de functions
-
-
-procedure:
-
-on parcours chaque ligne
-on detecte le type de statement de la ligne (declaration | affectation | boucle | condition | appel de function)
-on extrait les tokens (regex)
-on ajoute à l'AST
