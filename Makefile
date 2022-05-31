@@ -2,4 +2,4 @@ compile:
 	gcc main.c */*.c  -o main
 
 run:
-	main.exe
+	./main sample.algo
