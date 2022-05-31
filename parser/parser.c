@@ -462,6 +462,25 @@ ast_t *parse_expr(buffer_t *buffer) {
 
   int len = 0;
   while (true) {
+    int rollback_count = buffer->it;
+    char *fn_name = lexer_getalphanum(buffer);
+    char right_parenthesis = buf_getchar_after_blank(buffer);
+    rollback_count = buffer->it - rollback_count;
+    if (right_parenthesis == '(' && strlen(fn_name) != 0 && !is_logic_operator(fn_name)) {
+        ast_t *fn_call = parse_fncall(buffer, fn_name);
+        if (fn_call == NULL) {
+          printf("error lors du parsing d\'une fonction");
+          return NULL;
+        }
+        cursor->node = fn_call;
+        cursor->next = malloc(sizeof(ast_list_t));
+        previous = cursor;
+        cursor = cursor->next;
+        len++;
+        continue;    
+    }
+    buf_lock(buffer);
+    buf_rollback_and_unlock(buffer, rollback_count);
     char next_char = buf_getchar_after_blank(buffer);
     if (next_char == ';' || next_char == ',') {
       buf_lock(buffer);
@@ -633,6 +652,8 @@ ast_t *NPI(ast_list_t* expr, int len) {
 ast_t *ast_from_stack(ast_t *stack[], ast_t *tree, int *i) {
   if (stack[*i]->type == AST_VARIABLE || 
   stack[*i]->type == AST_INTEGER || 
+    stack[*i]->type == AST_FNCALL || 
+
   (stack[*i]->type == AST_UNARY && strcmp(stack[*i]->unary.op, "(") == 0)) {
     return stack[*i];
   }
@@ -665,6 +686,8 @@ bool is_higher_precedence(ast_t *a, ast_t *b) {
 
   } else if (a->type == AST_UNARY && strcmp(a->unary.op, "(") == 0) {
         left= "(";
+  }  else if (a->type == AST_FNCALL) {
+        left = "FN_CALL";
   }
 
   if (b->type == AST_BINARY) {
@@ -674,6 +697,9 @@ bool is_higher_precedence(ast_t *a, ast_t *b) {
   } 
   else if (b->type == AST_UNARY && strcmp(b->unary.op, "(") == 0) {
         right = "(";
+  }
+  else if (b->type == AST_FNCALL) {
+        right = "FN_CALL";
   }
   int left_rank = TABLE_LEVELS;
   int right_rank = TABLE_LEVELS;

@@ -63,6 +63,8 @@ bool analyze_function(ast_t *tree, ast_symbols* symbols) {
             is_valid_statement = analyze_fncall(statement, symbols);
         } else if (statement->type == AST_CONDITION || statement->type == AST_LOOP) {
             is_valid_statement = analyze_function(statement, symbols);
+        } else if(statement->type == AST_RETURN) {
+            is_valid_statement = true;
         }
         if (is_valid_statement == false) {
             return false;

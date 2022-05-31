@@ -1,5 +1,6 @@
 fonction func (entier a,entier b) : entier {
     func(func(5), 4, 542);
+
     entier test = (a <= b) ET (( Y >= UI OU ((X  == Z)))) OU d == F ET (P == C);
     si ( (((20 + 4)) * 134 + 489 +(5 / 94) * 5) +178 ) {
         entier d = toto;
@@ -10,7 +11,7 @@ fonction func (entier a,entier b) : entier {
         entier test = 4;
     } 
     
-    tantque (test > test) {
+    tantque (test > func(5 + 89)) {
     func(25);
         func(45);
         entier test = 4;
@@ -28,5 +29,8 @@ fonction func (entier a,entier b) : entier {
     } 
     }
     }
+}
 
+fonction f2 () : rien  {
+    func(s);
 }
