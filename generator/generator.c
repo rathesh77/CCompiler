@@ -29,11 +29,11 @@ void generate_code(ast_list_t* tree, FILE *file) {
             fputs( "{", file);
             fputs("\n", file);
             generate_stmts(ast->function.stmts, file, 1);
+            fputs("}\n\n", file);
         }
 
         cursor = cursor->next;
     }
-    fputs("}", file);
 }
 
 void generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
@@ -110,6 +110,10 @@ void generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
             }
             fputs(");\n", file);
 
+        } else if (ast->type == AST_RETURN) {
+            fputs("return ", file);
+            fputs(build_expr(ast->ret.expr), file);
+            fputs(";\n", file);
         }
         cursor = cursor->next;
     }
@@ -151,16 +155,16 @@ char* build_expr(ast_t* expr) {
         strcat( op, " " );
 
         char *right_expr = build_expr(expr->binary.right);
-        char *right = malloc(sizeof(char) * strlen(right_expr));
+        char *right = malloc(sizeof(char) * (strlen(right_expr) + 1));
 
         char *left_expr = build_expr(expr->binary.left);
-        char *left = malloc(sizeof(char) * (strlen(left_expr) + strlen(op)));
+        char *left = malloc(sizeof(char) * (strlen(left_expr) + strlen(op) + 1));
 
         strcpy(right, right_expr);
         strcpy(left,left_expr);
         strcat(left,op);
 
-        char* total = malloc(sizeof(char) * (strlen(left) + strlen(right)));
+        char* total = malloc(sizeof(char) * (strlen(left) + strlen(right) + 1));
         strcpy(total, left);
         strcat(total, right);
 
@@ -168,7 +172,7 @@ char* build_expr(ast_t* expr) {
     }
     if (expr->type == AST_UNARY) {
         char *str = build_expr(expr->unary.operand);
-        char *cpy = malloc(sizeof(char) * (255) + strlen(str) + 2);
+        char *cpy = malloc(sizeof(char) * (strlen(str) + 3));
         strcpy( cpy, "(" );
         strcat( cpy,str );
         strcat( cpy, ")" );
