@@ -53,7 +53,6 @@ int main(int argc, char *argv[]) {
 
   ast_list_t *ast = parse_code(&buffer);
   fclose(fd);
-  free(fd);
 
   if (ast != NULL) {
     if (has_valid_semantic(ast) == true) {
