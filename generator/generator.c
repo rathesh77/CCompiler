@@ -47,8 +47,10 @@ void generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
             char *value = build_expr(ast->declaration.rvalue);
             fputs("let ", file);
             fputs(var_name, file);
-            fputs(" = ", file);
-            fputs(value, file);
+            if (ast->declaration.rvalue != NULL) {
+                fputs(" = ", file);
+                fputs(value, file);
+            }
             fputs(";\n", file);
 
         } else if (ast->type == AST_ASSIGNMENT) {
@@ -135,7 +137,9 @@ char* convert_operator(char *op) {
 }
 
 char* build_expr(ast_t* expr) {
-
+    if (expr == NULL) {
+        return "";
+    }
     if (expr->type == AST_FNCALL) {
         char *str = build_expr(expr->call.args->node);
 
