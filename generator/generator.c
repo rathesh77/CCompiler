@@ -51,6 +51,13 @@ void generate_stmts(ast_list_t* stmts, FILE *file, int indent_level) {
             fputs(value, file);
             fputs(";\n", file);
 
+        } else if (ast->type == AST_ASSIGNMENT) {
+            char *var_name = ast->assignment.lvalue->var.name;
+            char *value = build_expr(ast->assignment.rvalue);
+            fputs(var_name, file);
+            fputs(" = ", file);
+            fputs(value, file);
+            fputs(";\n", file);
         } else if (ast->type == AST_CONDITION) {
             fputs("if (", file);
             fputs(build_expr(ast->branch.condition), file);            
