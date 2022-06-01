@@ -7,14 +7,6 @@
 #endif
 #include "../dictionnary/dictionnary.h"
 
-char *copy_name (char *name)
-{
-  size_t len = strlen(name) + 1;
-  char *out = malloc(sizeof(char) * len);
-  strncpy(out, name, len);
-  return out;
-}
-
 void print_backtrace ()
 {
 #ifndef WIN32
