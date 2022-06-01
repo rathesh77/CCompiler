@@ -132,7 +132,7 @@ char* build_expr(ast_t* expr) {
     if (expr->type == AST_FNCALL) {
         char *str = build_expr(expr->call.args->node);
 
-        char *total = malloc(sizeof(char) * (strlen(str)) + (strlen(expr->call.name) + 2));
+        char *total = malloc(sizeof(char) * (strlen(str) + (strlen(expr->call.name) + 3)));
         strcpy(total, expr->call.name);
                 strcat(total, "(");
         strcat(total, str);
@@ -178,6 +178,7 @@ char* build_expr(ast_t* expr) {
         strcat( cpy, ")" );
         return cpy;
     }
+    return "";
 }
 
 void indent(FILE *file,int indent_level) {
