@@ -145,10 +145,11 @@ char* build_expr(ast_t* expr) {
 
         char *total = malloc(sizeof(char) * (strlen(str) + (strlen(expr->call.name) + 3)));
         strcpy(total, expr->call.name);
-                strcat(total, "(");
+        strcat(total, "(");
         strcat(total, str);
-                strcat(total, ")");
+        strcat(total, ")");
 
+        free(str);
         return total;
     }
     if (expr->type == AST_VARIABLE) {
@@ -178,7 +179,9 @@ char* build_expr(ast_t* expr) {
         char* total = malloc(sizeof(char) * (strlen(left) + strlen(right) + 1));
         strcpy(total, left);
         strcat(total, right);
-
+        free(op);
+        free(right);
+        free(left);
         return total;
     }
     if (expr->type == AST_UNARY) {
@@ -187,6 +190,7 @@ char* build_expr(ast_t* expr) {
         strcpy( cpy, "(" );
         strcat( cpy,str );
         strcat( cpy, ")" );
+        free(str);
         return cpy;
     }
     return "";
