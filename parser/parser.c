@@ -194,7 +194,14 @@ void parse_function(buffer_t *buffer, ast_t **function) {
           buf_lock(buffer);
           buf_rollback_and_unlock(buffer, strlen(lexem));
         } else {
-          previous = is_elseif(buffer, previous);
+         if (buf_getchar_after_blank(buffer)!= '{') {
+           break;
+         }
+         ast_t *c = malloc(sizeof(ast_t));
+         c->type = AST_COMPOUND_STATEMENT;
+         c->compound_stmt.stmts = malloc(sizeof(ast_list_t));
+         previous->branch.invalid = ast_new_comp_stmt(c->compound_stmt.stmts);
+         parse_function(buffer,&(c));
         }
       }
       continue;
