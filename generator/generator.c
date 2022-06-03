@@ -148,8 +148,6 @@ char* build_expr(ast_t* expr) {
         strcat(total, "(");
         strcat(total, str);
         strcat(total, ")");
-
-        free(str);
         return total;
     }
     if (expr->type == AST_VARIABLE) {
