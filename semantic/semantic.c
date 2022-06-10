@@ -31,8 +31,8 @@ bool iterate_functions(ast_list_t *tree) {
     ast_list_t *cursor = tree;
     ast_list_sym *list = create_symbols_table();
     
-    insert_function(cursor->node, list->node->functions);
     while (cursor->node->type != AST_NULL) {
+        insert_function(cursor->node, list->node->functions);
         ast_list_sym *new_list = create_symbols_table();
         new_list->node->functions = list->node->functions;
         if (analyze_function(cursor->node, new_list) == false) {
