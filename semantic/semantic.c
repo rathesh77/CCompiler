@@ -93,7 +93,7 @@ bool analyze_fncall(ast_t *fncall, ast_list_sym* list) {
                 ast_list_t *func_cursor_params = current_function->function.params;
                 ast_list_t *call_cursor_params = fncall->call.args;
 
-                while (func_cursor_params != NULL) {
+                while (func_cursor_params->node->type != AST_NULL) {
                     ast_t *current_call_param = call_cursor_params->node;
                     ast_t *current_fn_param = func_cursor_params->node;
 
@@ -103,7 +103,9 @@ bool analyze_fncall(ast_t *fncall, ast_list_sym* list) {
                     
                     func_cursor_params = func_cursor_params->next;
                     call_cursor_params = call_cursor_params->next;
-                    if (call_cursor_params == NULL && func_cursor_params != NULL)
+                    if (call_cursor_params->node->type == AST_NULL && func_cursor_params->node->type != AST_NULL || 
+                    call_cursor_params->node->type != AST_NULL && func_cursor_params->node->type == AST_NULL
+                    )
                         return false;
                  }
                 return true;
