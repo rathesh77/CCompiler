@@ -155,7 +155,7 @@ char* build_expr(ast_t* expr) {
     }
     if (expr->type == AST_INTEGER) {
         char *str = malloc(sizeof(char) * 11); 
-        sprintf(str, "%d", expr->integer);
+        sprintf(str, "%ld", expr->integer);
         return str;
     }    
     if (expr->type == AST_BINARY) {
