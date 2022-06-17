@@ -141,8 +141,25 @@ char* build_expr(ast_t* expr) {
         return "";
     }
     if (expr->type == AST_FNCALL) {
-        char *str = build_expr(expr->call.args->node);
+        ast_list_t *cursor_args = expr->call.args;
+        int len = 0;
+        while (cursor_args->node->type != AST_NULL) {
+            len += strlen(build_expr(cursor_args->node)) +1;
+            cursor_args = cursor_args->next;
+        }
+        char *str = malloc(sizeof(char) * len);
+        strcpy(str, "");
+        cursor_args = expr->call.args;
+        while (true) {
+            strcat(str,build_expr(cursor_args->node));
+            if (cursor_args->next->node->type == AST_NULL) {
+                break;
+            }
+            strcat(str, ",");
+            cursor_args = cursor_args->next;
+        }
 
+        str[len] = '\0';
         char *total = malloc(sizeof(char) * (strlen(str) + (strlen(expr->call.name) + 3)));
         strcpy(total, expr->call.name);
         strcat(total, "(");
@@ -155,7 +172,7 @@ char* build_expr(ast_t* expr) {
     }
     if (expr->type == AST_INTEGER) {
         char *str = malloc(sizeof(char) * 11); 
-        sprintf(str, "%d", expr->integer);
+        sprintf(str, "%ld", expr->integer);
         return str;
     }    
     if (expr->type == AST_BINARY) {

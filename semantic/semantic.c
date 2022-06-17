@@ -31,8 +31,8 @@ bool iterate_functions(ast_list_t *tree) {
     ast_list_t *cursor = tree;
     ast_list_sym *list = create_symbols_table();
     
-    insert_function(cursor->node, list->node->functions);
     while (cursor->node->type != AST_NULL) {
+        insert_function(cursor->node, list->node->functions);
         ast_list_sym *new_list = create_symbols_table();
         new_list->node->functions = list->node->functions;
         if (analyze_function(cursor->node, new_list) == false) {
@@ -90,6 +90,24 @@ bool analyze_fncall(ast_t *fncall, ast_list_sym* list) {
         while (functions->node->type != AST_NULL) {
             ast_t *current_function = functions->node;
             if (strcmp(current_function->function.name, fncall->function.name) == 0) {
+                ast_list_t *func_cursor_params = current_function->function.params;
+                ast_list_t *call_cursor_params = fncall->call.args;
+
+                while (func_cursor_params->node->type != AST_NULL) {
+                    ast_t *current_call_param = call_cursor_params->node;
+                    ast_t *current_fn_param = func_cursor_params->node;
+
+                    if (current_fn_param->type != current_call_param->type)
+                        if (current_fn_param->type == AST_INTEGER && current_call_param->type == AST_VARIABLE && call_cursor_params->node->var.type != AST_INTEGER)
+                            return false;
+                    
+                    func_cursor_params = func_cursor_params->next;
+                    call_cursor_params = call_cursor_params->next;
+                    if (call_cursor_params->node->type == AST_NULL && func_cursor_params->node->type != AST_NULL || 
+                    call_cursor_params->node->type != AST_NULL && func_cursor_params->node->type == AST_NULL
+                    )
+                        return false;
+                 }
                 return true;
             }
             functions = functions->next;
