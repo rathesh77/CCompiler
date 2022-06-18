@@ -45,6 +45,46 @@ bool iterate_functions(ast_list_t *tree) {
     return true;
 }
 
+bool analyze_condition(ast_t *tree, ast_list_sym* list) {
+    ast_t *cursor = tree;
+    while (true) {
+          if (cursor->type == AST_LOOP) {
+            if (analyze_condition(cursor->loop.condition, list) == false) {
+                return false;
+            }
+            return true;
+        }  
+        if (cursor->type == AST_CONDITION) {
+            if (analyze_condition(cursor->branch.condition, list) == false) {
+                return false;
+            }
+            return true;
+        }   
+        if (cursor->type == AST_BINARY) {
+            if (analyze_condition(cursor->binary.left, list) == false) {
+                return false;
+            }
+            if (analyze_condition(cursor->binary.right, list) == false) {
+                return false;
+            }
+            break;
+        } else if (cursor->type == AST_UNARY) {
+            cursor = cursor->unary.operand;
+        } else if (cursor->type == AST_FNCALL) {
+            if (analyze_fncall(cursor, list) == false) {
+                return false;
+            }
+        } else if (cursor->type == AST_VARIABLE) {
+            if (variable_exists(cursor, list) == false) {
+                return false;
+            }
+        }
+        if (cursor->type != AST_UNARY && cursor->type != AST_BINARY)
+            break;
+    }
+    return true;
+}
+
 bool analyze_function(ast_t *tree, ast_list_sym* list) {
     ast_list_t *cursor_stmt = NULL;
     ast_symbols *cursor_sym = list->node;
@@ -69,7 +109,10 @@ bool analyze_function(ast_t *tree, ast_list_sym* list) {
             is_valid_statement = analyze_fncall(statement, list);
         } else if (statement->type == AST_CONDITION || statement->type == AST_LOOP) {
             ast_list_sym *new_list = create_symbols_table();
-            new_list->previous = list;            
+            new_list->previous = list;
+            if (!analyze_condition(statement, list)) {
+                return false;
+            }
             is_valid_statement = analyze_function(statement, new_list);
         } else if(statement->type == AST_RETURN) {
             is_valid_statement = true;
@@ -100,7 +143,17 @@ bool analyze_fncall(ast_t *fncall, ast_list_sym* list) {
                     if (current_fn_param->type != current_call_param->type)
                         if (current_fn_param->type == AST_INTEGER && current_call_param->type == AST_VARIABLE && call_cursor_params->node->var.type != AST_INTEGER)
                             return false;
-                    
+                    if (current_call_param->type == AST_VARIABLE) {
+                        if (variable_exists(current_call_param, cursor_list) == false) {
+                            return false;
+                        }
+                    }
+                    if (current_call_param->type == AST_FNCALL) {
+                        if (analyze_fncall(current_call_param, cursor_list) == false) {
+                            return false;
+                        }
+                        
+                    }
                     func_cursor_params = func_cursor_params->next;
                     call_cursor_params = call_cursor_params->next;
                     if (call_cursor_params->node->type == AST_NULL && func_cursor_params->node->type != AST_NULL || 
@@ -140,17 +193,34 @@ bool analyze_assignment(ast_t * assignment, ast_list_sym* list) {
 }
 
 bool analyze_declaration(ast_t * declaration, ast_list_sym* list) {
-    ast_list_t *variables  = list->node->variables;
-    while (variables->node->type != AST_NULL) {
-        ast_t *current_variable = variables->node;
-        if (strcmp(current_variable->declaration.lvalue->var.name, declaration->declaration.lvalue->var.name) == 0 && current_variable->declaration.lvalue->var.type ==declaration->declaration.lvalue->var.type) {
-                return false;
+    if (variable_exists(declaration, list) == true)
+        return false;
+    
+    if (declaration->declaration.rvalue->type == AST_FNCALL) {
+        if (analyze_fncall(declaration->declaration.rvalue, list) == false) {
+            return false;
         }
-        variables = variables->next;
-    }    
+    }
     insert_variable(declaration, list->node->variables);
 
     return true;
+}
+
+bool variable_exists(ast_t * declaration, ast_list_sym* list) {
+    ast_list_t *variables  = list->node->variables;
+    while (variables->node->type != AST_NULL) {
+        ast_t *current_variable = variables->node;
+        if (declaration->type == AST_DECLARATION)
+            if (strcmp(current_variable->declaration.lvalue->var.name, declaration->declaration.lvalue->var.name) == 0 && current_variable->declaration.lvalue->var.type ==declaration->declaration.lvalue->var.type)
+                return true;
+        if (declaration->type == AST_VARIABLE)
+            if (strcmp(current_variable->declaration.lvalue->var.name, declaration->var.name) == 0 && current_variable->declaration.lvalue->var.type ==declaration->var.type) 
+                return true;
+        
+        
+        variables = variables->next;
+    }
+    return false;
 }
 
 void insert_variable(ast_t *var, ast_list_t*vars) {
