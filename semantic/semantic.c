@@ -111,7 +111,15 @@ bool analyze_function(ast_t *tree, ast_list_sym* list) {
             is_valid_statement = analyze_declaration(statement, list);
         } else if(statement->type == AST_FNCALL) {            
             is_valid_statement = analyze_fncall(statement, list);
-        } else if (statement->type == AST_CONDITION || statement->type == AST_LOOP) {
+
+        }  else if (statement->type == AST_LOOP) {
+            ast_list_sym *new_list = create_symbols_table();
+            new_list->previous = list;
+            if (analyze_condition(statement, list) == false) {
+                return false;
+            }
+            is_valid_statement = analyze_function(statement, list);
+        } else if (statement->type == AST_CONDITION) {
             ast_list_sym *new_list = create_symbols_table();
             new_list->previous = list;
             if (analyze_condition(statement, list) == false) {
