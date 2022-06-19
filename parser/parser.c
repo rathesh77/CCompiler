@@ -188,7 +188,6 @@ void parse_function(buffer_t *buffer, ast_t **function) {
         }
         previous = elseif;
       }
-      if (elseif != NULL) {
         char *lexem = lexer_getalphanum(buffer);
         if (strcmp(lexem, ELSE) != 0) {
           buf_lock(buffer);
@@ -203,7 +202,7 @@ void parse_function(buffer_t *buffer, ast_t **function) {
          previous->branch.invalid = ast_new_comp_stmt(c->compound_stmt.stmts);
          parse_function(buffer,&(c));
         }
-      }
+      
       continue;
     }
     st = parse_loop(buffer);
