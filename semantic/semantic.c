@@ -92,6 +92,10 @@ bool analyze_function(ast_t *tree, ast_list_sym* list) {
         cursor_stmt = tree->function.stmts;
     } else if (tree->type == AST_CONDITION) {
         cursor_stmt = tree->branch.valid->compound_stmt.stmts;
+        if (tree->branch.invalid->type == AST_CONDITION) {
+            if (analyze_function(tree->branch.invalid, list) == false)
+                return false;
+        }
     } else if(tree->type == AST_LOOP) {
         cursor_stmt = tree->loop.stmts;
 
@@ -110,10 +114,20 @@ bool analyze_function(ast_t *tree, ast_list_sym* list) {
         } else if (statement->type == AST_CONDITION || statement->type == AST_LOOP) {
             ast_list_sym *new_list = create_symbols_table();
             new_list->previous = list;
-            if (!analyze_condition(statement, list)) {
+            if (analyze_condition(statement, list) == false) {
                 return false;
             }
-            is_valid_statement = analyze_function(statement, new_list);
+            ast_t *cursor_cond = statement->branch.invalid;
+
+            while (cursor_cond != NULL && cursor_cond->type == AST_CONDITION) {
+                if (analyze_condition(cursor_cond, list) == false) {
+                    return false;
+                }
+                if (cursor_cond->branch.invalid->type != AST_CONDITION)
+                    break;
+                cursor_cond  = cursor_cond->branch.invalid;
+            }
+            is_valid_statement = analyze_function(statement, list);
         } else if(statement->type == AST_RETURN) {
             is_valid_statement = true;
         }
