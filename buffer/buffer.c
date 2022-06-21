@@ -7,8 +7,8 @@
 
 #include "../utils/utils.h"
 
-void buf_init(buffer_t *buffer, FILE *fd) {
-  memset(buffer->content, 0, BUF_SIZE);
+void buf_init(buffer_t *buffer, FILE *fd, int size) {
+ // memset(buffer->content, 0, size);
   buffer->fd = fd;
   buffer->it = 0;
   buffer->end = 0;
@@ -19,6 +19,7 @@ void buf_init(buffer_t *buffer, FILE *fd) {
   buffer->bytesreadsincelock = 0;
   buffer->currchar = 0;
   buffer->eof = false;
+  buffer->size = size;
 }
 
 bool buf_eof_strict(buffer_t *buffer) {
@@ -56,18 +57,16 @@ static size_t buf_fread(buffer_t *buffer, size_t offset, size_t n) {
     buffer->eof = true;
   }
   buffer->bytesread += cnt;
-  if (buffer->islocked) {
-    buffer->bytesreadsincelock += cnt;
-  }
+
   return cnt;
 }
 
 static void buf_mod(size_t *val, size_t toadd) {
-  *val = (*val + toadd) % BUF_SIZE;
+  *val = (*val + toadd);
 }
 
 static void buf_mod_backwards(size_t *val, size_t tosub) {
-  *val = (*val - tosub) % BUF_SIZE;
+  *val = (*val - tosub);
 }
 
 static void buf_move_it(buffer_t *buffer, size_t cnt) {
@@ -81,87 +80,17 @@ static void buf_move_it_bw(buffer_t *buffer, size_t cnt) {
 }
 
 char buf_getchar(buffer_t *buffer) {
-  size_t end;
-  if (buffer->avail == 0) {
-    if (buffer->islocked) {
-      // on doit charger le max de caractères
-      // on commence par la fin de la chaîne entre end et lock
-      if (buffer->end >= buffer->lock) {
-        if (buffer->end < BUF_SIZE - 1) {
-          end = buf_fread(buffer, buffer->end, BUF_SIZE - buffer->end);
-        } else {
-          end = 0;
-        }
-        end += buf_fread(buffer, 0, buffer->lock);
-        if (end == 0) goto fail;
-      } else if (buffer->bytesreadsincelock >= BUF_SIZE) {
-        printf("Can't lock more than %d chars.", BUF_SIZE);
-        // print_backtrace();
-        exit(1);
-      } else {
-        end = buf_fread(buffer, buffer->end, buffer->lock - buffer->end);
-      }
-      buf_mod(&buffer->end, end);
-    } else {
-      if ((end = buf_fread(buffer, 0, BUF_SIZE)) == 0) {
-        goto fail;
-      }
-      buffer->end = end - 1;
-    }
-    buffer->avail = end;
-  }
 
   char ret = buffer->content[buffer->it];
   buf_move_it(buffer, 1);
   buffer->avail -= 1;
   return ret;
-fail:
-  buffer->avail = 0;
-  buffer->end = 0;
-  buffer->it = 0;
-  return '\0';
+
 }
 
 char buf_getchar_after_blank(buffer_t *buffer) {
   buf_skipblank(buffer);
   return buf_getchar(buffer);
-}
-
-void buf_getnchar(buffer_t *buffer, char *out, size_t n) {
-  char *outcurs = out;
-  size_t cnt, max;
-  char *content = buffer->content;
-
-  while (n) {
-    // number of chars that can be read w/o going back to 0
-    size_t currpos = !buffer->islocked ? buffer->it : buffer->lock;
-
-    size_t nmax = BUF_SIZE - currpos < n ? BUF_SIZE - currpos : n;
-    // if the current number of buffered items is not enough
-    if (buffer->avail < nmax) {
-      // if |xxxxx]------[xxxxx| then |xxxxxxxxxxx][xxxxx|
-      if (buffer->end < currpos) max = currpos - buffer->end;
-      // if |-----[xxxxxx]-----| then |-----[xxxxxxxxxxx]|
-      else
-        max = BUF_SIZE - buffer->end;
-
-      cnt = buf_fread(buffer, buffer->end, max);
-      buf_mod(&buffer->end, cnt);
-      buffer->avail += cnt;
-    }
-
-    if (buffer->avail < nmax) {
-      out[0] = '\0';
-      return;
-    }
-
-    memcpy(outcurs, &content[currpos], nmax);
-    buffer->avail -= nmax;
-    buf_move_it(buffer, nmax);
-    if (n <= nmax) break;
-    outcurs += nmax;
-    n -= nmax;
-  }
 }
 
 void buf_forward(buffer_t *buffer, size_t n) {
@@ -171,7 +100,7 @@ void buf_forward(buffer_t *buffer, size_t n) {
 
 void buf_rollback(buffer_t *buffer, size_t n) {
   if (!buffer->islocked) {
-    fprintf(stderr, "Warning: rollback without lock.\n");
+    //fprintf(stderr, "Warning: rollback without lock.\n");
     // print_backtrace();
   }
   buf_move_it_bw(buffer, n);
@@ -184,12 +113,6 @@ void buf_rollback_and_unlock(buffer_t *buffer, size_t n) {
 }
 
 size_t buf_skipblank(buffer_t *buffer) {
-  bool waslocked = false;
-  if (!buffer->islocked) {
-    buf_lock(buffer);
-  } else {
-    waslocked = true;
-  }
   size_t count = 0;
   char next = buf_getchar(buffer);
   while (ISBLANK(next)) {
@@ -197,8 +120,6 @@ size_t buf_skipblank(buffer_t *buffer) {
     count++;
   }
   buf_rollback(buffer, 1);
-  if (!waslocked) buf_unlock(buffer);
-
   if (next == '\0') {
     buffer->avail = 0;
   }
@@ -208,13 +129,8 @@ size_t buf_skipblank(buffer_t *buffer) {
 char buf_getchar_rollback(buffer_t *buffer) {
   bool waslocked = true;
   buf_skipblank(buffer);
-  if (!buffer->islocked) {
-    buf_lock(buffer);
-    waslocked = false;
-  }
   char next = buf_getchar(buffer);
   buf_rollback(buffer, 1);
-  if (!waslocked) buf_unlock(buffer);
   return next;
 }
 

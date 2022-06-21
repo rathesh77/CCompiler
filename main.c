@@ -49,7 +49,17 @@ int main(int argc, char *argv[]) {
     printf("le fichier n\'existe pas");
     return -1;
   }
-  buf_init(&buffer, fd);
+  int size = 0;
+  char c;
+
+  while (fread(&c,1,1,fd) ==1) {
+    size++;
+  }
+  buf_init(&buffer, fd, size);
+  buffer.content = malloc(sizeof(char) * size);
+
+  fseek(fd, SEEK_SET,0);
+  fread(buffer.content, 1, size, fd);
 
   ast_list_t *ast = parse_code(&buffer);
   fclose(fd);

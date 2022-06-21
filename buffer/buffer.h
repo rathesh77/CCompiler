@@ -8,7 +8,7 @@
 #define ISBLANK(chr) ((chr) == ' ' || (chr) == '\n' || (chr) == '\t')
 
 typedef struct buffer_t {
-  char content[BUF_SIZE];
+  char *content;
   FILE *fd;
   size_t it; // iterator
   size_t end;
@@ -17,12 +17,13 @@ typedef struct buffer_t {
   size_t bytesread;
   size_t bytesreadsincelock;
   size_t currchar;
+  size_t size;
   bool islocked;
   bool eof;
 } buffer_t;
 
 void buf_print (buffer_t *buffer);
-void buf_init (buffer_t *buffer, FILE *fd);
+void buf_init (buffer_t *buffer, FILE *fd, int size);
 bool buf_eof (buffer_t *buffer);
 bool buf_eof_strict (buffer_t *buffer);
 char buf_getchar (buffer_t *buffer);
