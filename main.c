@@ -56,7 +56,6 @@ int main(int argc, char *argv[]) {
     size++;
   }
   buf_init(&buffer, fd, size);
-  buffer.content = malloc(sizeof(char) * size);
 
   fseek(fd, SEEK_SET,0);
   fread(buffer.content, 1, size, fd);
