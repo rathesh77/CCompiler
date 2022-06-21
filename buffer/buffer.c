@@ -9,6 +9,7 @@
 
 void buf_init(buffer_t *buffer, FILE *fd, int size) {
  // memset(buffer->content, 0, size);
+  buffer->content = malloc(sizeof(char) * size);
   buffer->fd = fd;
   buffer->it = 0;
   buffer->end = 0;
