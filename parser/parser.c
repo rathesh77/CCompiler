@@ -39,7 +39,10 @@ ast_list_t *parse_code(buffer_t *buffer) {
   ast_list_t *functions = malloc(sizeof(ast_list_t));
   ast_list_t *cursor = functions;
 
-  while (buf_eof(buffer) == false) {
+  while (true) {
+    buf_skipblank(buffer);
+    if (buffer->it == buffer->size) 
+      break;
     char *lexem = lexer_getalphanum(buffer);
     if (strcmp(FUNCTION, lexem) == 0) {
       char *func_name = lexer_getalphanum(buffer);
@@ -118,7 +121,8 @@ ast_list_t *parse_code(buffer_t *buffer) {
         }
       }
     } else {
-      break;
+      printf("signature de fonction incorrecte\n");
+      return NULL;
     }
   }
   cursor->node = ast_new_return(NULL);
