@@ -21,7 +21,7 @@ bool analyze_condition(ast_t *, ast_list_sym*);
 bool variable_exists(ast_t *, ast_list_sym*);
 bool analyze_assignment(ast_t *, ast_list_sym*);
 bool analyze_declaration(ast_t *, ast_list_sym*);
-
+bool analyze_expr(ast_t *, ast_list_sym* );
 bool analyze_fncall(ast_t *, ast_list_sym*);
 
 void insert_variable(ast_t *, ast_list_t*);

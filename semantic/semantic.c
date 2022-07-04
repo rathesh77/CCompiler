@@ -30,11 +30,21 @@ ast_list_sym* create_symbols_table() {
 bool iterate_functions(ast_list_t *tree) {
     ast_list_t *cursor = tree;
     ast_list_sym *list = create_symbols_table();
-    
     while (cursor->node->type != AST_NULL) {
+        ast_list_t *functions = list->node->functions;
+        list = create_symbols_table();
+        list->node->functions = functions;
         insert_function(cursor->node, list->node->functions);
+        ast_list_t *cursor_param = cursor->node->function.params;
+
+        while (cursor_param->node->type != AST_NULL) {
+            insert_variable(ast_new_declaration(cursor_param->node, NULL), list->node->variables);
+            cursor_param = cursor_param->next;
+        }
         ast_list_sym *new_list = create_symbols_table();
         new_list->node->functions = list->node->functions;
+        new_list->node->variables = list->node->variables;
+
         if (analyze_function(cursor->node, new_list) == false) {
             return false;
         }
@@ -204,6 +214,9 @@ bool analyze_assignment(ast_t * assignment, ast_list_sym* list) {
         while (variables->node->type != AST_NULL) {
             ast_t *current_variable = variables->node;
             if (strcmp(current_variable->declaration.lvalue->var.name, assignment->assignment.lvalue->var.name) == 0 && current_variable->declaration.lvalue->var.type == assignment->assignment.lvalue->var.type) {
+                if (assignment->assignment.rvalue!= NULL && assignment->assignment.lvalue->type != AST_NULL && analyze_expr(assignment->assignment.rvalue, list) == false) {
+                    return false;
+                }
                 return true;
             }
             variables = variables->next;
@@ -222,9 +235,37 @@ bool analyze_declaration(ast_t * declaration, ast_list_sym* list) {
         if (analyze_fncall(declaration->declaration.rvalue, list) == false) {
             return false;
         }
+    } else {
+        if (declaration->declaration.rvalue != NULL && analyze_expr(declaration->declaration.rvalue, list) == false) {
+            return false;
+        }
     }
+
     insert_variable(declaration, list->node->variables);
 
+    return true;
+}
+
+bool analyze_expr(ast_t *expr, ast_list_sym* list) {
+    ast_t *cursor_variable = expr;
+
+    if (cursor_variable->type == AST_BINARY) {
+        bool is_valid =  analyze_expr(cursor_variable->binary.left, list);
+        if (is_valid == false)
+            return false;
+        is_valid =  analyze_expr(cursor_variable->binary.right, list);
+        if (is_valid == false)
+            return false;
+    } else {
+        if (cursor_variable->type == AST_FNCALL) {
+            if (analyze_fncall(cursor_variable, list) == false)
+                return false;
+        }
+        if (cursor_variable->type == AST_VARIABLE) {
+            if (variable_exists(cursor_variable, list) == false)
+                return false;
+        }
+    }
     return true;
 }
 
