@@ -314,7 +314,7 @@ ast_t *parse_fncall(buffer_t *buffer, char *fn_name) {
   ast_list_t *cursor = args;
   while (true) {
     ast_t *arg = parse_expr(buffer);
-    if (arg == NULL) return NULL;
+    if (arg == NULL || arg->type == AST_NULL) return NULL;
     char next_char = buf_getchar_after_blank(buffer);
     if (next_char != ',' && next_char != ')') {
       printf("error lors du parsing de la function %s\n", fn_name);
