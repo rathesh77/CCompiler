@@ -218,7 +218,7 @@ bool analyze_declaration(ast_t * declaration, ast_list_sym* list) {
     if (variable_exists(declaration, list) == true)
         return false;
     
-    if (declaration->declaration.rvalue->type == AST_FNCALL) {
+    if (declaration->declaration.rvalue != NULL && declaration->declaration.rvalue->type == AST_FNCALL) {
         if (analyze_fncall(declaration->declaration.rvalue, list) == false) {
             return false;
         }
