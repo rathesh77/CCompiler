@@ -20,7 +20,7 @@ ast_t *parse_return(buffer_t *buffer) {
   if (buf_getchar_after_blank(buffer) != ';') {
     return NULL;
   }
-  return expr;
+  return ast_new_return(expr);
 }
 ast_list_t *parse_code(buffer_t *buffer) {
   // presence d'accolades
