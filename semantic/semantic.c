@@ -256,6 +256,11 @@ bool analyze_expr(ast_t *expr, ast_list_sym* list) {
         is_valid =  analyze_expr(cursor_variable->binary.right, list);
         if (is_valid == false)
             return false;
+    } else if (cursor_variable->type == AST_UNARY) {
+        bool is_valid =  analyze_expr(cursor_variable->unary.operand, list);
+ 
+        if (is_valid == false)
+            return false;
     } else {
         if (cursor_variable->type == AST_FNCALL) {
             if (analyze_fncall(cursor_variable, list) == false)
