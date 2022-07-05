@@ -524,20 +524,16 @@ ast_t *NPI(ast_list_t *expr, int len) {
   int cpt = len - 1;
   stack[0] = NULL;
   while (cursor != NULL && i < len) {
-    // if (cursor->node->type == AST_BINARY) {
     if (stack[i] == NULL || is_higher_precedence(cursor->node, stack[i])) {
       stack[++i] = cursor->node;
       cursor = cursor->next;
     } else {
       do {
         out[cpt--] = stack[i];
-        stack[i] = NULL;
-        i--;
+        stack[i--] = NULL;
       } while (stack[i] != NULL &&
                is_higher_precedence(stack[i], out[cpt + 1]));
-      // stack[i] = cursor->node;
     }
-    //}
   }
   while (i > 0) {
     out[cpt--] = stack[i--];
