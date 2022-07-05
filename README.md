@@ -1,6 +1,6 @@
 # Compilateur langage ALGO vers Javascript
 
-Compilateur écrit en **langage C**, qui génère un code "cible" en **Javascript** à partir d'un code "source" écrit dans un **langage algorithmique** àbasé sur une syntaxe francaise simple.
+Compilateur écrit en **langage C**, qui génère un code "cible" en **Javascript** à partir d'un code "source" écrit dans un **langage algorithmique** basé sur une syntaxe francaise simple.
 
 Le fichier "source" doit avoir l'extension ".algo" (ex: **test.algo**). Un exemple est déjà fourni à la racine du projet. (**sample.algo**).
 
