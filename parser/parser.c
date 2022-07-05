@@ -23,19 +23,7 @@ ast_t *parse_return(buffer_t *buffer) {
   return ast_new_return(expr);
 }
 ast_list_t *parse_code(buffer_t *buffer) {
-  // presence d'accolades
-  // declarations de fonctions (fonction func (a : entier, b: entier ...) {})
-  // appels de fonctions ( func(a, b) )
-  // boucle (pour, tant que, faire tant que)
-  // condition si sinon, si sinon si sinon ...
-  // affectations  (entier a = 5)
-  // instructions composés ({ a = 2;b = 3; })
-  // ne pas oublier les operateurs unaires (++, --, *=, %=, /=, ...)
-
-  // on cherche d'abord une declaration de fonction, si y en a pas, on throw une
-  // erreur
-  // pour l'instant on ne prend en compte que le type INTEGER pour les variables
-  // NE PAS OUBLIER DE GERER LES TYPES DE RETOUR DES FONCTIONS
+  
   ast_list_t *functions = malloc(sizeof(ast_list_t));
   ast_list_t *cursor = functions;
 
@@ -340,9 +328,6 @@ ast_t *parse_arg(buffer_t *buffer) {
   buf_lock(buffer);
   buf_rollback_and_unlock(buffer, 1);
   if (is_letter(ch) == true) {
-    // si premier char est une lettre
-    //  alors l'arg est soit un appel de fonction, soit une variable
-    // sinon c'est surement un entier hardcodé
 
     char *arg = lexer_getalphanum(buffer);
     char next_char = buf_getchar_rollback(buffer);
@@ -408,7 +393,7 @@ ast_t *parse_expr(buffer_t *buffer) {
       buf_rollback_and_unlock(buffer, 1);
       break;
     } else if (is_arithmetic_operator(
-                   next_char)) {  // si on tombe sur +, - ,/ ou *
+                   next_char)) {
       if (len % 2 == 0) {
         printf("error lors du parsing d\'une expression\n");
         return NULL;
@@ -428,7 +413,7 @@ ast_t *parse_expr(buffer_t *buffer) {
     buf_lock(buffer);
     buf_rollback_and_unlock(buffer, 1);
     char *lexem = lexer_getalphanum(buffer);
-    if (is_logic_operator(lexem)) {  // si on tombe sur "ET" ou "OU"
+    if (is_logic_operator(lexem)) {
       ast_binary_e operator= {};
       operator.op = lexem;
 
