@@ -1,8 +1,16 @@
 fonction func (entier a,entier b) : entier {
     entier ac = 2;
+    entier Y;
+    entier UI;
+    entier X;
+    entier Z;
+    entier d;
+    entier F;
+    entier P;
+    entier C;
     entier test = (a <= b) ET (( Y >= UI OU ((X  == Z)))) OU d == F ET (P == C);
     si ( test == 2 ET func(func(15,3), func(23,2)) == 2) {
-        entier test1 = func(func(15,3), func(2,func(func(15,3), func(2,2))));
+        entier test1 = func(func(func(func(15,3), func(2,func(func(122,3), func(2)))),3), func(2,func(func(122,3), func(2,2))));
     } sinonsi (test >= test) {
         entier test2 = 4;
     } 
@@ -42,6 +50,14 @@ fonction func (entier a,entier b) : entier {
 
 fonction func2 (entier a,entier b) : entier {
     entier ac = 2;
+    entier Y;
+    entier UI;
+    entier X;
+    entier Z;
+    entier d;
+    entier F;
+    entier P;
+    entier C;
     entier test = (a <= b) ET (( Y >= UI OU ((X  == Z)))) OU d == F ET (P == C);
     si ( 1 == 2) {
     } 
@@ -70,4 +86,3 @@ fonction func2 (entier a,entier b) : entier {
         }
     }
 }
-
