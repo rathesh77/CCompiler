@@ -137,8 +137,6 @@ void parse_function(buffer_t *buffer, ast_t **function) {
     if (end_bracket == '}') {
       cursor->node = ast_new_return(NULL);
       cursor->node->type = AST_NULL;
-
-      printf("parsing de fonction terminé\n");
       return;
     }
     buf_lock(buffer);
