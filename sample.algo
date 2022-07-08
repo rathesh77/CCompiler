@@ -10,7 +10,7 @@ fonction func (entier a,entier b) : entier {
     entier C;
     entier test = (a <= b) ET (( Y >= UI OU ((X  == Z)))) OU d == F ET (P == C);
     si ( test == 2 ET func(func(15,3), func(23,2)) == 2) {
-        entier test1 = func(func(func(func(15,3), func(2,func(func(122,3), func(2)))),3), func(2,func(func(122,3), func(2,2))));
+        entier test1 = func(func(func(func(15,3), func(2,func(func((a <= b) ET (( Y >= UI OU ((X  == Z)))) OU d == F ET (P == C),3), func(2,4)))),3), func(2,func(func(122,3), func(2,2))));
     } sinonsi (test >= test) {
         entier test2 = 4;
     } 
