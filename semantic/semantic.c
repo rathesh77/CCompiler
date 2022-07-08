@@ -201,8 +201,6 @@ bool analyze_fncall(ast_t *fncall, ast_list_sym* list) {
         cursor_list = cursor_list->previous;
     }    
 
-    printf("function \"%s\" non défini\n", fncall->call.name);
-
     return false;
 }
 
@@ -223,7 +221,6 @@ bool analyze_assignment(ast_t * assignment, ast_list_sym* list) {
         }
         cursor_list = cursor_list->previous;
     }
-    printf("variable \"%s\" non declaré\n", assignment->assignment.lvalue->var.name);
     return false;
 }
 

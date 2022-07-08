@@ -40,32 +40,26 @@ ast_list_t *parse_code(buffer_t *buffer) {
       ast_list_t *ptr_params = params;
       bool has_more_params = false;
       if (left_parenthesis != '(') {
-        printf("error");
         return NULL;
       }
       while (true) {
         char *param_type = lexer_getalphanum(buffer);
         if (strlen(param_type) == 0) {
           if (has_more_params == true) {
-            printf("error\n");
             return NULL;
           }
           char next_char = buf_getchar_after_blank(buffer);
           if (next_char == ')') {
             if (buf_getchar_after_blank(buffer) != ':') {
-              printf("Type de retour requis\n");
               return NULL;
             }
             char *ret = lexer_getalphanum(buffer);
             if (strcmp(ret, INTEGER) != 0 && strcmp(ret, VOID) != 0) {
-              printf("Type de retour inconnu\n");
               return NULL;
             }
             if (buf_getchar_after_blank(buffer) != '{') {
-              printf("Accolade ouvrante requis\n");
               return NULL;
             }
-            printf("declaration fonction parsé\n");
             ptr_params->node = ast_new_return(NULL);
 
             ptr_params->node->type = AST_NULL;
@@ -83,17 +77,14 @@ ast_list_t *parse_code(buffer_t *buffer) {
             cursor = cursor->next;
             break;
           } else {
-            printf("error\n");
             return NULL;
           }
         }
         if (strcmp(param_type, "entier") != 0) {
-          printf("parametre de fonction manquant\n");
           return NULL;
         }
         char *param_name = lexer_getalphanum(buffer);
         if (strlen(param_name) == 0) {
-          printf("parametre de fonction manquant\n");
           return NULL;
         }
         ptr_params->node = ast_new_variable(param_name, 0);
@@ -109,7 +100,6 @@ ast_list_t *parse_code(buffer_t *buffer) {
         }
       }
     } else {
-      printf("signature de fonction incorrecte\n");
       return NULL;
     }
   }
@@ -243,7 +233,6 @@ void parse_function(buffer_t *buffer, ast_t **function) {
       break;
     }
   }
-  printf("Une ou plusieurs erreurs de syntaxe rencontrées\n");
   free(*function);
   *function = NULL;
   function = NULL;
@@ -258,14 +247,12 @@ ast_t *parse_assignment(buffer_t *buffer) {
   }
   ast_t *right = parse_expr(buffer);
   if (right == NULL || right->type == AST_NULL) {
-    printf("error lors du parsing de declaration\n");
     return NULL;
   }
   char semi_colon = buf_getchar_after_blank(buffer);
   if (semi_colon == ';')
     return ast_new_assignment(ast_new_variable(var_name, 0), right);
 
-  printf("error lors du parsing d\'assignement\n");
   return NULL;
 }
 
@@ -282,7 +269,6 @@ ast_t *parse_declaration(buffer_t *buffer) {
   }
   ast_t *right = parse_expr(buffer);
   if (right == NULL || right->type == AST_NULL) {
-    printf("error lors du parsing de declaration\n");
     return NULL;
   }
 
@@ -290,7 +276,6 @@ ast_t *parse_declaration(buffer_t *buffer) {
   if (semi_colon == ';')
     return ast_new_declaration(ast_new_variable(var_name, 0), right);
 
-  printf("error lors du parsing d\'assignement\n");
   return NULL;
 }
 ast_t *parse_fncall(buffer_t *buffer, char *fn_name) {
@@ -303,7 +288,6 @@ ast_t *parse_fncall(buffer_t *buffer, char *fn_name) {
     if (arg == NULL || arg->type == AST_NULL) return NULL;
     char next_char = buf_getchar_after_blank(buffer);
     if (next_char != ',' && next_char != ')') {
-      printf("error lors du parsing de la function %s\n", fn_name);
       return NULL;
     }
     if (arg != NULL) {
@@ -353,7 +337,6 @@ ast_t *parse_expr(buffer_t *buffer) {
         !is_logic_operator(fn_name)) {
       ast_t *fn_call = parse_fncall(buffer, fn_name);
       if (fn_call == NULL) {
-        printf("error lors du parsing d\'une fonction");
         return NULL;
       }
       cursor->node = fn_call;
@@ -373,7 +356,6 @@ ast_t *parse_expr(buffer_t *buffer) {
     } else if (next_char == '(') {
       ast_t *arg = parse_expr(buffer);
       if (arg == NULL || buf_getchar_after_blank(buffer) != ')') {
-        printf("manque une parenthese fermante!\n");
         return NULL;
       }
       ast_t *unary_parenthese = malloc(sizeof(ast_t));
@@ -393,7 +375,6 @@ ast_t *parse_expr(buffer_t *buffer) {
     } else if (is_arithmetic_operator(
                    next_char)) {
       if (len % 2 == 0) {
-        printf("error lors du parsing d\'une expression\n");
         return NULL;
       }
       ast_binary_e operator= {};
@@ -431,7 +412,6 @@ ast_t *parse_expr(buffer_t *buffer) {
         if (next_char == '=') {
           comp_op = "<=";
         } else if (next_char != '\0' && next_char != ' ') {
-          printf("error lors du parsing de condition\n");
           return NULL;
         } else {
           comp_op = "<";
@@ -441,7 +421,6 @@ ast_t *parse_expr(buffer_t *buffer) {
         if (next_char == '=') {
           comp_op = ">=";
         } else if (next_char != '\0' && next_char != ' ') {
-          printf("error lors du parsing de condition\n");
           return NULL;
         } else {
           comp_op = ">";
@@ -449,7 +428,6 @@ ast_t *parse_expr(buffer_t *buffer) {
       } else if (next_char == '=' && buf_getchar(buffer) == '=') {
         comp_op = "==";
       } else {
-        printf("error\n");
         return NULL;
       }
       ast_binary_e operator= {};
@@ -465,7 +443,6 @@ ast_t *parse_expr(buffer_t *buffer) {
       continue;
     }
     if (len % 2 != 0 && !is_logic_operator(lexem)) {
-      printf("error\n");
       return NULL;
     }
     buf_lock(buffer);
@@ -484,7 +461,6 @@ ast_t *parse_expr(buffer_t *buffer) {
     return args;
   }
   if (len % 2 == 0) {
-    printf("nombre insuffisant de membre dans l\'expression\n");
     return NULL;
   }
   previous->next = NULL;
@@ -599,21 +575,17 @@ ast_t *parse_condition(buffer_t *buffer) {
   if (strcmp(lexer_getalphanum(buffer), IF) == 0) {
     char left_parenthesis = buf_getchar_after_blank(buffer);
     if (left_parenthesis != '(') {
-      printf("error lors du parsing de condition\n");
       return NULL;
     }
     ast_t *expr = parse_expr(buffer);
     if (expr == NULL) {
-      printf("error lors du parsing de condition\n");
       return NULL;
     }
     if (buf_getchar_after_blank(buffer) == ')') {
       if (buf_getchar_after_blank(buffer) != '{') {
-        printf("Accolade fermante manquante apres la condition si\n");
         return NULL;
       }
     } else {
-      printf("Accolade fermante manquante apres la condition si\n");
       return NULL;
     }
 
@@ -632,7 +604,6 @@ ast_t *parse_condition(buffer_t *buffer) {
 
     parse_function(buffer, &valid_branch);
     if (valid_branch == NULL) {
-      printf("error lors du parsing de condition\n");
       return NULL;
     }
     expr = ast_new_condition(expr, valid_branch, invalid_branch);
@@ -646,21 +617,17 @@ ast_t *is_elseif(buffer_t *buffer, ast_t *previous) {
   char *lexem = lexer_getalphanum(buffer);
   char left_parenthesis = buf_getchar_after_blank(buffer);
   if (left_parenthesis != '(') {
-    printf("error lors du parsing de condition\n");
     return NULL;
   }
   ast_t *expr = parse_expr(buffer);
   if (expr == NULL) {
-    printf("error lors du parsing de condition\n");
     return NULL;
   }
   if (buf_getchar_after_blank(buffer) == ')') {
     if (buf_getchar_after_blank(buffer) != '{') {
-      printf("Accolade fermante manquante apres la condition si\n");
       return NULL;
     }
   } else {
-    printf("Accolade fermante manquante apres la condition si\n");
     return NULL;
   }
 
@@ -679,7 +646,6 @@ ast_t *is_elseif(buffer_t *buffer, ast_t *previous) {
 
   parse_function(buffer, &valid_branch);
   if (valid_branch == NULL) {
-    printf("error lors du parsing de condition\n");
     return NULL;
   }
   expr = ast_new_condition(expr, valid_branch, invalid_branch);
@@ -690,27 +656,22 @@ ast_t *is_elseif(buffer_t *buffer, ast_t *previous) {
 ast_t *parse_loop(buffer_t *buffer) {
   if (strcmp(lexer_getalphanum(buffer), "tantque") == 0) {
     if (buf_getchar_after_blank(buffer) != '(') {
-      printf("parenthese ouvrante manquante au debut d\'une tantque\n");
       return NULL;
     }
     ast_t *expr = parse_expr(buffer);
     if (expr == NULL) {
-      printf("erreur lors du parsing d\'une boucle tantque\n");
       return NULL;
     }
     ast_t *loop = ast_new_loop(expr, malloc(sizeof(ast_list_t)));
     if (buf_getchar_after_blank(buffer) == ')') {
       if (buf_getchar_after_blank(buffer) != '{') {
-        printf("Accolade fermante manquante apres la condition si\n");
         return NULL;
       }
     } else {
-      printf("Accolade fermante manquante apres la condition si\n");
       return NULL;
     }
     parse_function(buffer, &loop);
     if (loop == NULL) {
-      printf("error lors du parsing de loop\n");
       return NULL;
     }
     return loop;
@@ -723,11 +684,9 @@ ast_t *is_fncall(buffer_t *buffer) {
   if (buf_getchar_after_blank(buffer) == '(' && strlen(fn_call_name) != 0) {
     ast_t *expr = parse_fncall(buffer, fn_call_name);
     if (expr == NULL) {
-      printf("error dans un appel un fonction\n");
       return NULL;
     }
     if (buf_getchar_after_blank(buffer) != ';') {
-      printf("point virgule manquant\n");
       return NULL;
     }
 
