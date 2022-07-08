@@ -64,6 +64,8 @@ int main(int argc, char *argv[]) {
   fclose(fd);
 
   if (ast != NULL) {
+    printf("analyse lexicale et syntaxique valide.\n");
+
     if (has_valid_semantic(ast) == true) {
       printf("analyse semantique valide.\n");
       FILE * output;
