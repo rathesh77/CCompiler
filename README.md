@@ -1,3 +1,7 @@
+# Auteurs du projet
+- CHARLES MAHENDRAN Rathesh
+- RASOLOMANANA Setraniaina Mianin'Harizo
+
 # Compilateur langage ALGO vers Javascript
 
 Compilateur écrit en **langage C**, qui génère un code "cible" en **Javascript** à partir d'un code "source" écrit dans un **langage algorithmique** à syntaxe francaise.
@@ -59,6 +63,11 @@ Compilation "à la main": ```gcc main.c */*.c -g -o main```
 
 Execution: ```./main.exe sample.algo```
 
-**N.B: Ne pas oublier de fournir le nom du fichier "source" en argument de la commande d'exécution**.
+# Quelques notes importantes
+- Ne pas oublier de fournir le nom du fichier "source" en argument de la commande d'exécution.
+- L'analyse sémantique est sujette à contenir des bugs que nous n'aurions pas identifié. De ce fait, lors de l'exécution du programme, si un message "analyse sémantique incorrecte" s'affiche dans la console alors que la structure du fichier .algo est bonne, nous vous invitons à modifier la fonction main dans le fichier **/main.c** en remplaçant la condition à la **ligne 35** ```if (has_valid_semantic(ast) == true)``` par ```if (true)```. En faisant cela, le programme sautera cette étape, et vous pourrez continuer vos tests sans que ce soit trop encombrant.
+- Lorsque vous vous trompez involontairement en faisant une erreur de syntaxe dans le fichier .algo, le compilateur va simplement ecrire en sortie le message "Une ou plusieurs erreurs de syntaxe rencontrées" et ne donnera pas de détail. Il faut donc faire attention à ce que vous écrivez.
+    
+
 
 [Lien vers le depôt Github](https://github.com/rathesh77/CCompiler).
