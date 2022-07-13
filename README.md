@@ -12,7 +12,7 @@ Le fichier "source" doit avoir l'extension ".algo" (ex: **test.algo**). Un exemp
 
 **Analyse lexicale/syntaxique :**
 
-- opérateur binaire (+, -, >=, >, <, <=, ==, !=, *, /, ET, OU)
+- opérateur binaire (+, -, >=, >, <, <=, ==, *, /, ET, OU)
 
 - appel de fonction
 
