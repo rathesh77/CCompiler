@@ -1,7 +1,3 @@
-# Auteurs du projet
-- CHARLES MAHENDRAN Rathesh
-- RASOLOMANANA Setraniaina Mianin'Harizo
-
 # Compilateur langage ALGO vers Javascript
 
 Compilateur écrit en **langage C**, qui génère un code "cible" en **Javascript** à partir d'un code "source" écrit dans un **langage algorithmique** à syntaxe francaise.
