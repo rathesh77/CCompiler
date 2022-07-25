@@ -44,10 +44,10 @@ Le fichier "source" doit avoir l'extension ".algo" (ex: **test.algo**). Un exemp
 
 -  Il y a un problème de portée de variable dans les blocs "sinon si/sinon"
 	```
-	else if (...) { 
+	sinonsi (...) { 
 		let a = 5; 
 	} 
-	else { 
+	sinon { 
 		let a = 6; 
 	}
 	```
