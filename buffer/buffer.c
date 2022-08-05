@@ -7,10 +7,9 @@
 
 #include "../utils/utils.h"
 
-void buf_init(buffer_t *buffer, FILE *fd, int size) {
+void buf_init(buffer_t *buffer, int size) {
  // memset(buffer->content, 0, size);
   buffer->content = malloc(sizeof(char) * size);
-  buffer->fd = fd;
   buffer->it = 0;
   buffer->end = 0;
   buffer->lock = 0;
@@ -51,16 +50,6 @@ void buf_unlock(buffer_t *buffer) {
   buffer->islocked = false;
 }
 
-static size_t buf_fread(buffer_t *buffer, size_t offset, size_t n) {
-  // printf("read %lu bytes\n", n);
-  size_t cnt = fread(&(buffer->content[offset]), 1, n, buffer->fd);
-  if (cnt < n) {
-    buffer->eof = true;
-  }
-  buffer->bytesread += cnt;
-
-  return cnt;
-}
 
 static void buf_mod(size_t *val, size_t toadd) {
   *val = (*val + toadd);

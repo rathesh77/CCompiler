@@ -8,80 +8,31 @@
 #include "semantic/semantic.h"
 
 #define EXTENSION "algo"
+char * start_compiler(char *);
 
 int main(int argc, char *argv[]) {
-  if (argc == 1) {
-    printf("Veuillez fournir un fichier format .algo en entrée");
-    return -1;
-  }
-  char *filename = argv[1];
-  int len = strlen(filename);
-  char *file_without_extension = malloc(sizeof(char) * len);
+  char *code = "aaa";
+  code = start_compiler("fonction func (entier a,entier b) : entier { entier ac = 2; }");
+  printf("%s", code);
+  return 0;
+}
 
-  int cpt = 0;
-  char *extension = malloc(sizeof(char) * len);
-  while (cpt < len && filename[cpt] != '.') {
-    file_without_extension[cpt] = filename[cpt];
-    cpt++;
-  }
-  file_without_extension[cpt] = '\0';
-  if (cpt == len) {
-    printf("format de fichier invalide");
-    return -1;
-  }
-  cpt++;
-  int i = 0;
-  while (cpt < len) {
-    extension[i] = filename[cpt];
-    cpt++;
-    i++;
-  }
-  extension[i] = '\0';
-
-  if (strcmp(extension, EXTENSION) != 0) {
-    printf("format de fichier invalide");
-    return -1;
-  }
+char * start_compiler(char *code) {
 
   buffer_t buffer;
-  FILE *fd = fopen(filename, "r");
-  if (fd == NULL) {
-    printf("le fichier n\'existe pas");
-    return -1;
-  }
-  int size = 0;
-  char c;
-
-  while (fread(&c,1,1,fd) ==1) {
-    size++;
-  }
-  buf_init(&buffer, fd, size);
-
-  fseek(fd, SEEK_SET,0);
-  fread(buffer.content, 1, size, fd);
-
+  buf_init(&buffer, BUF_SIZE);
+  strcpy(buffer.content, code);
   ast_list_t *ast = parse_code(&buffer);
-  fclose(fd);
-
+  
   if (ast != NULL) {
     printf("analyse lexicale et syntaxique valide.\n");
 
     if (has_valid_semantic(ast) == true) {
       printf("analyse semantique valide.\n");
-      FILE * output;
-      char *output_filename = malloc(sizeof(char) * (strlen(file_without_extension) + strlen(EXTENSION) + 1));      
-      strcpy(output_filename, file_without_extension);
-      strcat(output_filename, ".js");
-      output = fopen(output_filename, "w");
-      if(output == NULL) {
-          printf("Impossible de créer le fichier\n");
-      } else {
-        generate_code(ast, output);
-        fclose(output);
-        printf("code généré dans le fichier ./%s\n", output_filename);
-      }
-      free(output_filename);
 
+      char * output = generate_code(ast, output);
+      printf("code fini \n");
+      return output;
     } else {
       printf("analyse semantique invalide...\n");
     }
@@ -89,6 +40,5 @@ int main(int argc, char *argv[]) {
 
   free(ast);
 
-  printf("end\n");
-  return 0;
+  return NULL;
 }

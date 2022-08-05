@@ -100,6 +100,10 @@ ast_list_t *parse_code(buffer_t *buffer) {
         }
       }
     } else {
+        cursor->node = ast_new_return(NULL);
+  cursor->node->type = AST_NULL;
+
+  return functions;
       return NULL;
     }
   }

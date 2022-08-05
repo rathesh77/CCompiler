@@ -1,5 +1,5 @@
 compile:
-	gcc main.c */*.c  -o main
+	gcc main.c */*.c -g -o main
 
 run:
 	./main sample.algo

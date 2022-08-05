@@ -4,12 +4,11 @@
 #include <stdbool.h>
 
 #define LEXEM_SIZE 60
-#define BUF_SIZE 2048
+#define BUF_SIZE 8048
 #define ISBLANK(chr) ((chr) == ' ' || (chr) == '\n' || (chr) == '\t')
 
 typedef struct buffer_t {
   char *content;
-  FILE *fd;
   size_t it; // iterator
   size_t end;
   size_t avail; // available
@@ -23,7 +22,7 @@ typedef struct buffer_t {
 } buffer_t;
 
 void buf_print (buffer_t *buffer);
-void buf_init (buffer_t *buffer, FILE *fd, int size);
+void buf_init (buffer_t *buffer, int size);
 bool buf_eof (buffer_t *buffer);
 bool buf_eof_strict (buffer_t *buffer);
 char buf_getchar (buffer_t *buffer);
