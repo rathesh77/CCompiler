@@ -2,7 +2,7 @@
 #include <string.h>
 char *output;
 char * generate_code(ast_list_t* tree) {
-    output = malloc(8024);    
+    output = malloc(sizeof(char) * 20048);    
     ast_list_t *cursor = tree;
 
     strcpy(output, "");
@@ -180,7 +180,7 @@ char* build_expr(ast_t* expr) {
             cursor_args = cursor_args->next;
         }
         char *str = malloc(sizeof(char) * len);
-        strcat(str, "");
+        strcpy(str, "");
         cursor_args = expr->call.args;
         while (true) {
             strcat(str,build_expr(cursor_args->node));
@@ -193,7 +193,7 @@ char* build_expr(ast_t* expr) {
 
         str[len] = '\0';
         char *total = malloc(sizeof(char) * (strlen(str) + (strlen(expr->call.name) + 3)));
-        strcat(total, expr->call.name);
+        strcpy(total, expr->call.name);
         strcat(total, "(");
         strcat(total, str);
         strcat(total, ")");
@@ -209,7 +209,7 @@ char* build_expr(ast_t* expr) {
     }    
     if (expr->type == AST_BINARY) {
         char *op = malloc(sizeof(char) *10);
-        strcat( op, " " );
+        strcpy( op, " " );
         strcat( op, convert_operator(expr->binary.op.op) );
         strcat( op, " " );
 
@@ -219,12 +219,12 @@ char* build_expr(ast_t* expr) {
         char *left_expr = build_expr(expr->binary.left);
         char *left = malloc(sizeof(char) * (strlen(left_expr) + strlen(op) + 1));
 
-        strcat(right, right_expr);
-        strcat(left,left_expr);
+        strcpy(right, right_expr);
+        strcpy(left,left_expr);
         strcat(left,op);
 
         char* total = malloc(sizeof(char) * (strlen(left) + strlen(right) + 1));
-        strcat(total, left);
+        strcpy(total, left);
         strcat(total, right);
         free(op);
         free(right);
@@ -234,7 +234,7 @@ char* build_expr(ast_t* expr) {
     if (expr->type == AST_UNARY) {
         char *str = build_expr(expr->unary.operand);
         char *cpy = malloc(sizeof(char) * (strlen(str) + 3));
-        strcat( cpy, "(" );
+        strcpy( cpy, "(" );
         strcat( cpy,str );
         strcat( cpy, ")" );
         free(str);

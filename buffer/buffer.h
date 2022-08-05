@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #define LEXEM_SIZE 60
-#define BUF_SIZE 8048
+#define BUF_SIZE 20048
 #define ISBLANK(chr) ((chr) == ' ' || (chr) == '\n' || (chr) == '\t')
 
 typedef struct buffer_t {
