@@ -4,7 +4,7 @@
 
 
 char *output;
-char * generate_code(ast_list_t*, char*);
+char * generate_code(ast_list_t*);
 void generate_stmts(ast_list_t*, int);
 char *build_expr(ast_t*);
 char *build_fncall(ast_t*);

@@ -30,9 +30,9 @@ char * start_compiler(char *code) {
     if (has_valid_semantic(ast) == true) {
       printf("analyse semantique valide.\n");
 
-      char * output = generate_code(ast, output);
+      char *out = generate_code(ast);
       printf("code fini \n");
-      return output;
+      return out;
     } else {
       printf("analyse semantique invalide...\n");
     }

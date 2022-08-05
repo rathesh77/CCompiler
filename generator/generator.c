@@ -1,7 +1,7 @@
 #include "generator.h"
 #include <string.h>
 
-char * generate_code(ast_list_t* tree, char * code) {
+char * generate_code(ast_list_t* tree) {
     output = malloc(8024);    
     ast_list_t *cursor = tree;
 
